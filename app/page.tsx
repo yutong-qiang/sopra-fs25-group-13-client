@@ -20,7 +20,7 @@ export default function Home() {
           priority
         /> */}
         <h1 style={{ margin: "20px 0", color: "#75bd9d"}}>
-          SoPra Group 13 - Milestone 1
+          SoPra Group 13
         </h1>
       </main>
     </div>
