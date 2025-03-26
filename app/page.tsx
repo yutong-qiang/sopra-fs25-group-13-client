@@ -1,13 +1,13 @@
 "use client"; // For components that need React hooks and browser APIs, SSR (server side rendering) has to be disabled. Read more here: https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering
 import "@ant-design/v5-patch-for-react-19";
-// import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 // import Image from "next/image";
-// import { Button } from "antd";
+import { Button } from "antd";
 // import { BookOutlined, CodeOutlined, GlobalOutlined } from "@ant-design/icons";
 import styles from "@/styles/page.module.css";
 
 export default function Home() {
-  // const router = useRouter();
+  const router = useRouter();
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -19,9 +19,30 @@ export default function Home() {
           height={38}
           priority
         /> */}
-        <h1 style={{ margin: "20px 0", color: "#75bd9d"}}>
-          SoPra Group 13
+        <h1 style={{ margin: "20px 0 0px 0", color: "#75bd9d", fontSize: "2rem", textAlign: "center" }}>
+          THE
         </h1>
+        <h1 style={{ margin: "0 0 20px 0", color: "#75bd9d", fontSize: "4rem", textAlign: "center" }}>
+          CHAMELEON
+        </h1>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
+          <Button
+            type="primary"
+            variant="solid"
+            onClick={() => router.push("/login")}
+            style={{ width: "200px" }}
+          >
+            Login
+          </Button>
+          <Button
+            type="primary"
+            variant="solid"
+            onClick={() => router.push("/register")}
+            style={{ width: "200px" }}
+          >
+            Register
+          </Button>
+        </div>
       </main>
     </div>
   );
