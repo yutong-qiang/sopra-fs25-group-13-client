@@ -103,7 +103,10 @@ const Register: React.FC = () => {
                 borderRadius: '8px',
                 fontSize: '16px',
                 backgroundColor: '#1a1a1a',
-                color: 'white',
+                '.ant-input': {
+                  backgroundColor: '#1a1a1a',
+                  color: 'white'
+                },
                 border: 'none'
               }}
             />
