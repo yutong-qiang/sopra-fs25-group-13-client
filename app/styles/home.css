@@ -1,0 +1,55 @@
+/* Fullscreen jungle background */
+.home-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: url("/jungle-bg.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+/* Logo container */
+.logo-container {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo-text {
+    color: #6edc99;
+    font-size: 28px;
+    font-weight: bold;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Button container */
+.button-container {
+    background: linear-gradient(to bottom, #5cbf74, #2c604b);
+    padding: 20px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Buttons */
+.home-button {
+    width: 180px;
+    padding: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    background: #49beb7;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    margin: 10px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.home-button:hover {
+    background: #51dacf;
+}
