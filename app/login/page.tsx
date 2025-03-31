@@ -30,12 +30,12 @@ const Login: React.FC = () => {
   const handleLogin = async (values: LoginFormFields) => {
     try {
       // Call the API service and let it handle JSON serialization and error handling
-      const response = await apiService.post<User>("/users", values);
+      const response = await apiService.post<User>("/login", values);
 
       // Use the useLocalStorage hook that returned a setter function (setToken in line 41) to store the token if available
       if (response && response.token) {
         setToken(response.token);
-        router.push("/users");
+        router.push("/main");
       }
       else {
         throw new Error("Login failed.");

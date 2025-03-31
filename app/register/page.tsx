@@ -27,7 +27,7 @@ const Register: React.FC = () => {
 
   const handleRegister = async (values: RegisterFormFields) => {
     try {
-      const response = await apiService.post<User>("/users", values);
+      const response = await apiService.post<User>("/register", values);
 
       if (response && response.token) {
         setToken(response.token);
@@ -103,12 +103,9 @@ const Register: React.FC = () => {
                 borderRadius: '8px',
                 fontSize: '16px',
                 backgroundColor: '#1a1a1a',
-                '.ant-input': {
-                  backgroundColor: '#1a1a1a',
-                  color: 'white'
-                },
+                color: 'white',
                 border: 'none'
-              }}
+              }} 
             />
           </Form.Item>
           <Form.Item style={{ marginBottom: 0, marginTop: '20px' }}>
