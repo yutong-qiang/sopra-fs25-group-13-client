@@ -34,8 +34,11 @@ const Login: React.FC = () => {
 
       // Use the useLocalStorage hook that returned a setter function (setToken in line 41) to store the token if available
       if (response && response.token) {
-        setToken(response.token);
-        router.push("/main");
+        await setToken(response.token);
+        // Add a small delay to ensure the token is set in localStorage
+        setTimeout(() => {
+          router.push("/main");
+        }, 100);
       }
       else {
         throw new Error("Login failed.");
