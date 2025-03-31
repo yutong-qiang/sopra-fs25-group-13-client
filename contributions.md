@@ -40,8 +40,8 @@ reason).
 | Yutong                   |  30.03.25  | https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/dfb8ae1a74b399271c19e7e82894af3ce30d634e | login, logout and registration functionalities added, tests added, error handling added according to user stories and based on client side's needs. https://github.com/yutong-qiang/sopra-fs25-group-13-server/issues/20, https://github.com/yutong-qiang/sopra-fs25-group-13-server/issues/21, https://github.com/yutong-qiang/sopra-fs25-group-13-server/issues/61, https://github.com/yutong-qiang/sopra-fs25-group-13-server/issues/62  | so that users get "permission" to join the game later |
 | Lorenzo            | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| Luca               | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| Luca               | 30.03.25   | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/59de41b113ae3acf6335f2e2a341a477d176c783 | Creating the homepage and the CSS file for the correct UI design, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/91 | The homepage is the first page the user sees and the CSS file allows for consistent UI styling |
+| Luca               | 31.03.25   | [[Link to Commit 2]](https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/a5de85bf3cae8b14d0f1773ba002e5e01945da71) | Adjusted structure and style for the different pages we have so far, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/90 | To keep the UI of our application consistent with our Figma design |
 
 ---
 
