@@ -34,7 +34,7 @@ reason).
 
 | **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| Katie              | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+| Katie              | 30.03.25   | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/5f9ebc24ed42be0bad1d8395c5acbe60c390988a                 | to make registration work, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/4, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/85, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/86, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/87      | so that the user can create an account in order to join the games |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | Yutong             | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
