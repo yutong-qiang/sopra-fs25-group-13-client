@@ -5,9 +5,9 @@ import { useApi } from "@/hooks/useApi";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { User } from "@/types/user";
 import { Button, Form, Input } from "antd";
-import styles from "@/styles/page.module.css";
 // Optionally, you can import a CSS module or file for additional styling:
 // import styles from "@/styles/page.module.css";
+import "@/styles/home.css";
 
 interface RegisterFormFields {
   username: string;
@@ -47,14 +47,8 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className={styles.page}>
-      <main className={styles.main} style={{ 
-        background: 'linear-gradient(145deg, #75bd9d 0%, #4a9276 100%)',
-        padding: '40px',
-        borderRadius: '20px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        width: '400px'
-      }}>
+    <div className="home-container">
+      <main className="button-container">
         <Form
           form={form}
           name="register"
@@ -111,30 +105,16 @@ const Register: React.FC = () => {
           <Form.Item style={{ marginBottom: 0, marginTop: '20px' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
               <Button 
-                onClick={() => router.push('/')} 
-                style={{ 
-                  flex: 1,
-                  height: '45px',
-                  borderRadius: '8px',
-                  background: '#5DC499',
-                  color: 'white',
-                  fontSize: '18px',
-                  fontWeight: 'bold'
-                }}
+                onClick={() => router.push('/')}
+                type="primary"
+                className="home-button"
               >
                 RETURN
               </Button>
               <Button 
                 type="primary" 
-                htmlType="submit" 
-                style={{ 
-                  flex: 1,
-                  height: '45px',
-                  borderRadius: '8px',
-                  background: '#5DC499',
-                  fontSize: '18px',
-                  fontWeight: 'bold'
-                }}
+                htmlType="submit"
+                className="home-button"
               >
                 REGISTER
               </Button>
