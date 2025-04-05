@@ -10,7 +10,7 @@ import "@/styles/home.css";
 
 interface LoginFormFields {
   username: string;
-  pasword: string;
+  password: string;
 }
 
 const Login: React.FC = () => {

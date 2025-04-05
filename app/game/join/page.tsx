@@ -23,7 +23,7 @@ export default function JoinGameSession() {
     <div className="home-container">
         <div className="button-container">
             <h1 className="text-white text-2xl font-bold text-center mb-6">
-                ENTER GAME SESSION ID
+                ENTER GAME SESSION TOKEN
             </h1>
             <input
                 type="text"
@@ -47,7 +47,6 @@ export default function JoinGameSession() {
                 </button>
             </div>
         </div>
-            
     </div>
   );
 }

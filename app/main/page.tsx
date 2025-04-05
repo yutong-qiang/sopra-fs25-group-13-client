@@ -80,10 +80,10 @@ const Main: React.FC = () => {
                     Welcome to Chameleon
                 </h1>
                 <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-                    <button onClick={() => router.push("/gamesession/join")} className="home-button">
+                    <button onClick={() => router.push("/game/join")} className="home-button">
                         JOIN GAME SESSION
                     </button>
-                    <button onClick={() => router.push("/gamesession/create")} className="home-button">
+                    <button onClick={() => router.push("/game")} className="home-button">
                         CREATE GAME SESSION
                     </button>
                     <button

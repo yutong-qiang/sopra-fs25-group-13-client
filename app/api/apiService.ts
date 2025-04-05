@@ -13,6 +13,14 @@ export class ApiService {
     };
   }
 
+  private getAuthHeaders(): HeadersInit {
+    const token = localStorage.getItem("token");
+    return {
+      ...this.defaultHeaders,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }
+
   /**
    * Helper function to check the response, parse JSON,
    * and throw an error if the response is not OK.
@@ -58,13 +66,18 @@ export class ApiService {
   /**
    * GET request.
    * @param endpoint - The API endpoint (e.g. "/users").
+   * @param options - Optional fetch options including headers.
    * @returns JSON data of type T.
    */
-  public async get<T>(endpoint: string): Promise<T> {
+  public async get<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "GET",
-      headers: this.defaultHeaders,
+      headers: {
+        ...this.getAuthHeaders(),
+        ...options.headers,
+      },
+      ...options,
     });
     return this.processResponse<T>(
       res,
@@ -76,14 +89,19 @@ export class ApiService {
    * POST request.
    * @param endpoint - The API endpoint (e.g. "/users").
    * @param data - The payload to post.
+   * @param options - Optional fetch options including headers.
    * @returns JSON data of type T.
    */
-  public async post<T>(endpoint: string, data: unknown): Promise<T> {
+  public async post<T>(endpoint: string, data: unknown, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "POST",
-      headers: this.defaultHeaders,
+      headers: {
+        ...this.getAuthHeaders(),
+        ...options.headers,
+      },
       body: JSON.stringify(data),
+      ...options,
     });
     return this.processResponse<T>(
       res,
@@ -101,7 +119,7 @@ export class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "PUT",
-      headers: this.defaultHeaders,
+      headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
     });
     return this.processResponse<T>(
@@ -119,7 +137,7 @@ export class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "DELETE",
-      headers: this.defaultHeaders,
+      headers: this.getAuthHeaders(),
     });
     return this.processResponse<T>(
       res,
