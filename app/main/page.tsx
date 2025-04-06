@@ -3,14 +3,13 @@
 import { useRouter } from "next/navigation";
 import styles from "@/styles/page.module.css";
 import useLocalStorage from "@/hooks/useLocalStorage";
-/*import { useApi } from "@/hooks/useApi";*/
 import { useEffect, useState } from "react";
 import "@/styles/home.css";
 
 const Main: React.FC = () => {
     const router = useRouter();
     const { value: token } = useLocalStorage<string>("token", "");
-    /*const apiService = useApi();*/
+    const { value: id } = useLocalStorage<string>("id", "");
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -24,43 +23,24 @@ const Main: React.FC = () => {
         return () => clearTimeout(timer);
     }, [token, router]);
 
-    /*const handleProfileClick = async () => {
-        try {
-            // Assuming the token is already available in your localStorage or state
-            const token = localStorage.getItem('token'); // Or use state where the token is stored
-
-            if (!token) {
-                message.error("No token found. Please log in.");
-                router.push("/login");
-                return;
-            }
-
-            // Fetch user info using token (assuming the token is set properly in headers or elsewhere)
-            const userResponse = await apiService.get<{ username: string }>("/users/me", {
-                headers: {
-                    Authorization: `Bearer ${token}`, // Pass the token in the header for authentication
-                },
-            });
-
-            if (userResponse?.username) {
-                // Navigate to the user's profile page using the fetched username
-                router.push(`/profile/${userResponse.username}`);
-            } else {
-                message.error("Invalid user data.");
-                router.push("/login");
-            }
-        } catch (error) {
-            console.error("Error fetching user profile:", error);
-            message.error("Failed to fetch user data.");
-            router.push("/login");
-        }
-    };*/
-
-
     if (isLoading) {
         return (
             <div className={styles.page}>
-                <main className={styles.main} style={{ background: "linear-gradient(145deg, #75bd9d 0%, #4a9276 100%)", padding: "40px", borderRadius: "20px", boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", width: "400px", display: "flex", flexDirection: "column", gap: "20px", alignItems: "center", justifyContent: "center" }}>
+                <main
+                    className={styles.main}
+                    style={{
+                        background: "linear-gradient(145deg, #75bd9d 0%, #4a9276 100%)",
+                        padding: "40px",
+                        borderRadius: "20px",
+                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                        width: "400px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "20px",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
                     <h1 style={{ color: "white", fontSize: "24px", fontWeight: "bold", textAlign: "center" }}>
                         Loading...
                     </h1>
@@ -87,7 +67,9 @@ const Main: React.FC = () => {
                         CREATE GAME SESSION
                     </button>
                     <button
-                        onClick={() => router.push("/profile/${user.username}")}
+                        onClick={() => {
+                            router.push(`/profile/${id}`);
+                        }}
                         className="home-button"
                     >
                         PROFILE
@@ -95,6 +77,7 @@ const Main: React.FC = () => {
                     <button
                         onClick={() => {
                             localStorage.removeItem("token");
+                            localStorage.removeItem("id");
                             router.push("/");
                         }}
                         className="home-button"

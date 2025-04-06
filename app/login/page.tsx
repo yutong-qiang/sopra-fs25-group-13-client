@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation"; // use NextJS router for navigation
 import { useApi } from "@/hooks/useApi";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { User } from "@/types/user";
-import { Button, Form, Input } from "antd";
 import "@/styles/home.css";
+import { Button, Form, Input } from "antd";
 
 interface LoginFormFields {
   username: string;
@@ -27,14 +27,19 @@ const Login: React.FC = () => {
   } = useLocalStorage<string>("token", ""); // note that the key we are selecting is "token" and the default value we are setting is an empty string
   // if you want to pick a different token, i.e "usertoken", the line above would look as follows: } = useLocalStorage<string>("usertoken", "");
 
+  const {
+      set: setUserId,
+  } = useLocalStorage<string>("id", "");
+
   const handleLogin = async (values: LoginFormFields) => {
     try {
       // Call the API service and let it handle JSON serialization and error handling
       const response = await apiService.post<User>("/login", values);
 
       // Use the useLocalStorage hook that returned a setter function (setToken in line 41) to store the token if available
-      if (response && response.token) {
+      if (response && response.token && response.id) {
         await setToken(response.token);
+        await setUserId(response.id.toString());
         // Add a small delay to ensure the token is set in localStorage
         setTimeout(() => {
           router.push("/main");

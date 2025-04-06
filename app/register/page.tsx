@@ -23,14 +23,18 @@ const Register: React.FC = () => {
   // Simply choose what you need from the hook:
   const {
     set: setToken,
-  } = useLocalStorage<string>("token", ""); 
+  } = useLocalStorage<string>("token", "");
+  const {
+      set: setUserId,
+  } = useLocalStorage<string>("id", "");
 
-  const handleRegister = async (values: RegisterFormFields) => {
+    const handleRegister = async (values: RegisterFormFields) => {
     try {
       const response = await apiService.post<User>("/register", values);
 
-      if (response && response.token) {
+      if (response && response.token && response.id) {
         setToken(response.token);
+        setUserId(response.id.toString());
         router.push("/main");
       }
       else {
