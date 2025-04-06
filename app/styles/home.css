@@ -33,6 +33,41 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
+.chameleon-box {
+    background: linear-gradient(to bottom, #5cbf74, #2c604b);
+    padding: 40px 60px;
+    border-radius: 25px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+/* Watermark */
+.chameleon-box::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    background: url('/transparent-chameleon.png') no-repeat center center;
+    background-size: contain;
+    opacity: 0.5;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+}
+
+.highlight {
+    color: #6edc99;
+}
+
+/* Text layering above watermark */
+.chameleon-title,
+.chameleon-subtitle {
+    position: relative;
+    z-index: 1;
+}
+
 /* Buttons */
 .home-button {
     width: 180px;
