@@ -57,7 +57,7 @@ reason).
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+| Luca | 05.04.25   | [[Link to Commit 1]](https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/979ee81538cda7a39336332eedbad3f3cc4b7690) | Implemented the user profile page, which displays username, profile picture and games played/won, and rules page, which shows the rules. https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/73, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/74, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/76, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/77, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/78| Users can now visit their profile and the rules page and see relevant information. |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 
 ---
