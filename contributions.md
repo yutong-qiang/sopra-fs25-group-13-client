@@ -30,7 +30,7 @@ reason).
 
 ---
 
-## Contributions Week 1 - [Begin Date] to [End Date]
+## Contributions Week 1 - 24.03.25 to 30.03.25
 
 | **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
@@ -47,11 +47,11 @@ reason).
 
 ---
 
-## Contributions Week 2 - [Begin Date] to [End Date]
+## Contributions Week 2 - 31.03.25 to 06.04.25
 
 | **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| **[@githubUser1]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+| Katie | 05.04.25   | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/7a0da0de9fee73d6ec25b9016c5e5fd7bb900112 | Fetches the game session token and displaye when creating a room. Can be pasted when joining a room. Redirects both after joining/creating to the game room where video call will be implemented. https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/14, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/15, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/16, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/80, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/22, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/23, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/89| Player can join the same room, where the game should be played. |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
