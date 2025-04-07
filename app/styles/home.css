@@ -144,5 +144,41 @@ body {
 h1, button {
     font-family: Georgia, 'Times New Roman', serif;
   }
+
+/* Video Container */
+.video-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 20px auto;
+}
+
+.video-wrapper {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
+}
+
+.video-element {
+    background-color: #000;
+    border: 2px solid #49beb7;
+    min-height: 300px;
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.video-element video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
   
   
