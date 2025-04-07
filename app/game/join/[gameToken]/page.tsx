@@ -238,14 +238,16 @@ export default function GameSessionPage() {
         <h1 className="text-white text-2xl font-bold text-center mb-6">
           GAME SESSION: {gameToken}
         </h1>
-        <div className="video-container">
+      </div>
+        <div className="video-container" style={{ marginLeft: '20px'}}>
           <div className="video-wrapper">
             <div 
               ref={localVideoRef} 
               className="video-element"
               style={{
                 backgroundColor: '#000',
-                minHeight: '300px',
+                minHeight: '150px',
+                minWidth: '150px',
                 border: '2px solid #49beb7',
                 borderRadius: '8px',
                 overflow: 'hidden'
@@ -256,7 +258,80 @@ export default function GameSessionPage() {
               className="video-element"
               style={{
                 backgroundColor: '#000',
-                minHeight: '300px',
+                minHeight: '150px',
+                minWidth: '150px',
+                border: '2px solid #49beb7',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}
+            />
+            <div 
+              ref={remoteVideoRef} 
+              className="video-element"
+              style={{
+                backgroundColor: '#000',
+                minHeight: '150px',
+                minWidth: '150px',
+                border: '2px solid #49beb7',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}
+            />
+            <div 
+              ref={remoteVideoRef} 
+              className="video-element"
+              style={{
+                backgroundColor: '#000',
+                minHeight: '150px',
+                minWidth: '150px',
+                border: '2px solid #49beb7',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}
+            />
+            <div 
+              ref={remoteVideoRef} 
+              className="video-element"
+              style={{
+                backgroundColor: '#000',
+                minHeight: '150px',
+                minWidth: '150px',
+                border: '2px solid #49beb7',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}
+            />
+            <div 
+              ref={remoteVideoRef} 
+              className="video-element"
+              style={{
+                backgroundColor: '#000',
+                minHeight: '150px',
+                minWidth: '150px',
+                border: '2px solid #49beb7',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}
+            />
+            <div 
+              ref={remoteVideoRef} 
+              className="video-element"
+              style={{
+                backgroundColor: '#000',
+                minHeight: '150px',
+                minWidth: '150px',
+                border: '2px solid #49beb7',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}
+            />
+            <div 
+              ref={remoteVideoRef} 
+              className="video-element"
+              style={{
+                backgroundColor: '#000',
+                minHeight: '150px',
+                minWidth: '150px',
                 border: '2px solid #49beb7',
                 borderRadius: '8px',
                 overflow: 'hidden'
@@ -264,9 +339,7 @@ export default function GameSessionPage() {
             />
           </div>
         </div>
-      </div>
+      
     </div>
   );
 }
-
-

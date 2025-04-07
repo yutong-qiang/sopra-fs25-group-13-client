@@ -148,7 +148,7 @@ h1, button {
 /* Video Container */
 .video-container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 500px;
     margin: 20px auto;
 }
 
@@ -181,4 +181,4 @@ h1, button {
     object-fit: cover;
 }
   
-  
+
