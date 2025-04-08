@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { connect, Room, LocalParticipant, RemoteParticipant, LocalTrackPublication, RemoteTrackPublication, Track, LocalVideoTrack, RemoteVideoTrack, createLocalTracks } from 'twilio-video';
 import { useApi } from '@/hooks/useApi';
@@ -17,6 +18,7 @@ interface VideoResponse {
 
 export default function GameSessionPage() {
   const params = useParams();
+  const router = useRouter();
   const gameToken = Array.isArray(params?.gameToken) 
   ? params.gameToken[0] 
   : params?.gameToken as string;
@@ -231,15 +233,32 @@ export default function GameSessionPage() {
       }
     };
   }, [gameToken, token, apiService]);
+/*
+  const handleStartGame = () => {
+    if (sessionId.trim()) {
+      // TODO: Implement the logic to join the game session
+      console.log('Joining session:', sessionId);
+    }
+  };
+*/
+  const handleReturn = () => {
+    router.push(`/main`); 
+  };
 
   return (
-    <div className="home-container">
-      <div className="button-container">
-        <h1 className="text-white text-2xl font-bold text-center mb-6">
-          GAME SESSION: {gameToken}
-        </h1>
-      </div>
-        <div className="video-container" style={{ marginLeft: '20px'}}>
+    <div className="home-container" style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center',
+      minHeight: '100vh'
+    }}>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'flex-start', 
+        gap: '20px',
+        justifyContent: 'center'
+      }}>
+        <div className="video-container">
           <div className="video-wrapper">
             <div 
               ref={localVideoRef} 
@@ -339,7 +358,42 @@ export default function GameSessionPage() {
             />
           </div>
         </div>
-      
+
+        <div className="button-container" style={{ 
+          backgroundColor: 'rgba(73, 190, 183, 0.2)', 
+          padding: '20px', 
+          borderRadius: '12px',
+          border: '2px solid #49beb7',
+          marginTop: '250px',
+          marginLeft: '50px',
+          textAlign: 'center'
+        }}>
+          <h1 className="text-white text-2xl font-bold" style={{ borderBottom: '2px solid rgb(255, 255, 255)', paddingBottom: '5px', marginBottom: '10px' }}>
+            GAME LOBBY
+          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '15px' }}>
+            <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>Session ID:</span>
+            <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>{gameToken}</span>
+          </div>
+          <div style={{ fontSize: '1.5rem', opacity: 0.9 }}>
+            ({participants.length + 1}/8 players)
+          </div>
+          <div className="flex gap-4 w-full" style={{ marginTop: '20px' }}>
+                <button
+                 onClick={handleReturn}
+                    className="home-button"   
+                >
+                    RETURN
+                </button>
+                <button
+                    //onClick={handleEnter}
+                    className="home-button"
+                >
+                    START GAME
+                </button>
+            </div> 
+        </div>
+      </div>
     </div>
   );
 }
