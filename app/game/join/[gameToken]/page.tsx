@@ -7,6 +7,8 @@ import { connect, Room, LocalParticipant, RemoteParticipant, LocalTrackPublicati
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import '../../../styles/home.css';
+import useGameSocket from "@/hooks/useGameSocket";
+
 
 
 interface VideoResponse {
@@ -19,9 +21,9 @@ interface VideoResponse {
 export default function GameSessionPage() {
   const params = useParams();
   const router = useRouter();
-  const gameToken = Array.isArray(params?.gameToken) 
+  /*const gameToken = Array.isArray(params?.gameToken) 
   ? params.gameToken[0] 
-  : params?.gameToken as string;
+  : params?.gameToken as string; */
   const [room, setRoom] = useState<Room | null>(null);
   const [participants, setParticipants] = useState<RemoteParticipant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,6 +32,24 @@ export default function GameSessionPage() {
   const remoteVideoRef = useRef<HTMLDivElement>(null);
   const apiService = useApi();
   const { value: token } = useLocalStorage<string>("token", "");
+
+  const { gameToken } = useParams();
+  const { value: authToken } = useLocalStorage<string>("token", "");
+
+  const {
+    sendAction,
+    subscribeToGame,
+    subscribeToUser,
+    disconnect
+  } = useGameSocket({
+    gameSessionToken: gameToken as string,
+    authToken,
+  });
+
+  /*
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+*/
 
   useEffect(() => {
     const connectToVideoRoom = async () => {
@@ -233,17 +253,134 @@ export default function GameSessionPage() {
       }
     };
   }, [gameToken, token, apiService]);
+
+  /*
+  useEffect(() => {
+    // Initialize WebSocket connection with auth token in the URL
+    if (!token) {
+      console.log('No token available, skipping WebSocket connection');
+      return;
+    }
+
+    console.log('Attempting to create WebSocket connection...');
+    // Create WebSocket connection
+    const ws = new WebSocket(`ws://localhost:3000/game/player-action?auth-token=${token}`);
+    
+    // Connection opened
+    ws.onopen = () => {
+      console.log('WebSocket connection established successfully');
+      console.log('WebSocket readyState:', ws.readyState);
+      setSocket(ws);
+      setIsConnected(true);
+    };
+
+    // Listen for messages
+    ws.onmessage = (event) => {
+      console.log('WebSocket message received:', event.data);
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Parsed message data:', data);
+        if (data.error) {
+          console.error('Server error received:', data.error);
+          setIsConnected(false);
+        }
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
+    };
+
+    // Handle errors
+    ws.onerror = (error) => {
+      console.error('WebSocket error occurred:', error);
+      console.log('WebSocket readyState at error:', ws.readyState);
+      setSocket(null);
+      setIsConnected(false);
+    };
+
+    // Handle connection close
+    ws.onclose = (event) => {
+      console.log('WebSocket connection closed:');
+      console.log('Close code:', event.code);
+      console.log('Close reason:', event.reason);
+      console.log('WebSocket readyState at close:', ws.readyState);
+      setSocket(null);
+      setIsConnected(false);
+    };
+
+    // Cleanup on unmount
+    return () => {
+      if (ws) {
+        console.log('Cleaning up WebSocket connection');
+        console.log('Final WebSocket readyState:', ws.readyState);
+        ws.close();
+        setIsConnected(false);
+      }
+    };
+  }, [token]);
+*/
+
+useEffect(() => {
+  if (!authToken || !gameToken) return;
+
+  const unsubGame = subscribeToGame((msg) => {
+    console.log("Game Event:", msg);
+    // update game state here
+  });
+
+  const unsubUser = subscribeToUser((msg) => {
+    console.log("User Message:", msg);
+    // handle errors or private events here
+  });
+
+  return () => {
+    unsubGame();
+    unsubUser();
+    disconnect();
+  };
+}, [authToken, gameToken]);
+
+const handleStartGame = () => {
+  sendAction("START_GAME");
+};
+
+const handleReturn = () => {
+  router.push('/main');
+};
+
+
+
+
 /*
   const handleStartGame = () => {
-    if (sessionId.trim()) {
-      // TODO: Implement the logic to join the game session
-      console.log('Joining session:', sessionId);
+    console.log('handleStartGame called');
+    console.log('isConnected:', isConnected);
+    console.log('socket state:', socket?.readyState);
+    
+    if (!isConnected || !socket) {
+      console.error('WebSocket not connected');
+      console.log('Connection details:');
+      console.log('- isConnected:', isConnected);
+      console.log('- socket exists:', !!socket);
+      console.log('- socket readyState:', socket?.readyState);
+      return;
+    }
+
+    const startGameAction = {
+      type: 'START_GAME',
+      gameSessionToken: gameToken
+    };
+
+    try {
+      console.log('Attempting to send game action:', startGameAction);
+      socket.send(JSON.stringify(startGameAction));
+      console.log('Game action sent successfully');
+    } catch (error) {
+      console.error('Error sending game action:', error);
+      console.log('Socket state when error occurred:', socket.readyState);
+      setIsConnected(false);
     }
   };
 */
-  const handleReturn = () => {
-    router.push(`/main`); 
-  };
 
   return (
     <div className="home-container" style={{ 
@@ -386,7 +523,7 @@ export default function GameSessionPage() {
                     RETURN
                 </button>
                 <button
-                    //onClick={handleEnter}
+                    onClick={handleStartGame}
                     className="home-button"
                 >
                     START GAME
