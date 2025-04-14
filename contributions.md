@@ -72,7 +72,7 @@ reason).
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+| Luca | 13.04.25   | [[Link to Commit 1]](https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/fcc6fc12753fe31cb76cdb48dea2ed8ae4cd1840) | Implemented the UI, basic functionality and a timer for the voting page. https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/44, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/45, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/46, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/47, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/48, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/64, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/65, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/66,| Players will be able to vote for who they think is the chameleon and will then see the results of the voting |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 ---
 
