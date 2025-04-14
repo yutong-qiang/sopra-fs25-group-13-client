@@ -1,12 +1,10 @@
 "use client";
 
 import { useParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { connect, Room, LocalParticipant, RemoteParticipant, LocalTrackPublication, RemoteTrackPublication, Track, LocalVideoTrack, RemoteVideoTrack, createLocalTracks } from 'twilio-video';
+import { connect, Room, RemoteParticipant, RemoteTrackPublication, Track, LocalVideoTrack, RemoteVideoTrack, createLocalTracks } from 'twilio-video';
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
-import { Form, Input } from 'antd';
 import '../../../styles/home.css';
 
 
@@ -21,7 +19,6 @@ interface VideoResponse {
 
 export default function GameSessionPage() {
   const params = useParams();
-  const router = useRouter();
   const gameToken = Array.isArray(params?.gameToken) 
     ? params.gameToken[0] 
     : params?.gameToken as string;
@@ -29,7 +26,6 @@ export default function GameSessionPage() {
   const [participants, setParticipants] = useState<RemoteParticipant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [playerOrder, setPlayerOrder] = useState<string[]>([]);
   const [currentSpeakingPlayer, setCurrentSpeakingPlayer] = useState<string>('');
   const localVideoRef = useRef<HTMLDivElement>(null);
   const remoteVideoRef = useRef<HTMLDivElement>(null);
@@ -42,7 +38,6 @@ export default function GameSessionPage() {
     const connectToVideoRoom = async () => {
       try {
         setIsLoading(true);
-
         const response = await apiService.post<VideoResponse>(`/game/join/${gameToken}`, null, {
           headers: {
             'Authorization': token,
@@ -70,7 +65,6 @@ export default function GameSessionPage() {
         console.log('Local participant:', localParticipant);
 
         // Set mock data first
-        setPlayerOrder([localParticipant.identity, 'player2', 'player3', 'player4', 'player5']);
         setCurrentSpeakingPlayer(localParticipant.identity);
 
         // Then handle video tracks
@@ -172,7 +166,7 @@ export default function GameSessionPage() {
         room.disconnect();
       }
     };
-  }, [gameToken, token, apiService]);
+  }, [gameToken, token, apiService, room, currentSpeakingPlayer]);
 
   useEffect(() => {
     const socket = new WebSocket('ws://your-websocket-url');
@@ -199,15 +193,40 @@ export default function GameSessionPage() {
     };
   }, []);
 
-  const handleReturn = () => {
-    router.push(`/main`); 
-  };
 
     const handleVote = () => {
         router.push(`/game/voting/${gameToken}`);
     };
 
   return (
+    <>
+    {isLoading && (
+      <div style={{ color: 'white', marginBottom: '10px' }}>
+        Loading video room...
+      </div>
+    )}
+
+    {error && (
+      <div style={{ color: 'red', marginBottom: '10px' }}>
+        {error}
+      </div>
+    )}
+    {participants.length > 0 && (
+  <div style={{ color: 'white', fontSize: '14px', marginBottom: '10px' }}>
+    Participants connected: {participants.length}
+  </div>
+)}
+{messages.length > 0 && (
+  <div style={{ color: '#49beb7', fontSize: '14px', marginTop: '20px' }}>
+    <strong>Messages:</strong>
+    <ul>
+      {messages.map((msg, idx) => (
+        <li key={idx}>{msg}</li>
+      ))}
+    </ul>
+  </div>
+)}
+
     <div className="home-container" style={{ 
       display: 'flex', 
       justifyContent: 'center', 
@@ -436,5 +455,6 @@ export default function GameSessionPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

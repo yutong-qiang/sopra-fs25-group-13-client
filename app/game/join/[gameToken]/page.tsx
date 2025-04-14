@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { connect, Room, LocalParticipant, RemoteParticipant, LocalTrackPublication, RemoteTrackPublication, Track, LocalVideoTrack, RemoteVideoTrack, createLocalTracks } from 'twilio-video';
+import { connect, Room, RemoteParticipant, RemoteTrackPublication, Track, LocalVideoTrack, RemoteVideoTrack, createLocalTracks } from 'twilio-video';
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import '../../../styles/home.css';
@@ -19,7 +19,6 @@ interface VideoResponse {
 }
 
 export default function GameSessionPage() {
-  const params = useParams();
   const router = useRouter();
   /*const gameToken = Array.isArray(params?.gameToken) 
   ? params.gameToken[0] 
@@ -162,9 +161,8 @@ export default function GameSessionPage() {
         videoRoom.on('participantDisconnected', handleParticipantDisconnected);
         
         setIsLoading(false);
-      } catch (error) {
-        console.error('Error connecting to video room:', error);
-        setError(error instanceof Error ? error.message : 'Failed to connect to video room');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
         setIsLoading(false);
       }
     };
@@ -252,7 +250,7 @@ export default function GameSessionPage() {
         room.disconnect();
       }
     };
-  }, [gameToken, token, apiService]);
+  }, [gameToken, token, apiService, room]);
 
   /*
   useEffect(() => {
@@ -337,7 +335,7 @@ useEffect(() => {
     unsubUser();
     disconnect();
   };
-}, [authToken, gameToken]);
+}, [authToken, gameToken, subscribeToGame, subscribeToUser, disconnect]);
 
 const handleStartGame = () => {
   sendAction("START_GAME");
@@ -383,6 +381,18 @@ const handleReturn = () => {
 */
 
   return (
+    <>
+    {isLoading && (
+      <div style={{ color: 'white', marginBottom: '10px' }}>
+        Loading video room...
+      </div>
+    )}
+
+    {error && (
+      <div style={{ color: 'red', marginBottom: '10px' }}>
+        {error}
+      </div>
+    )}
     <div className="home-container" style={{ 
       display: 'flex', 
       justifyContent: 'center', 
@@ -532,5 +542,6 @@ const handleReturn = () => {
         </div>
       </div>
     </div>
+    </>
   );
 }
