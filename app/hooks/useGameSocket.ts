@@ -17,7 +17,11 @@ const useGameSocket = ({ gameSessionToken, authToken }: UseGameSocketProps) => {
   const clientRef = useRef<Client | null>(null);
 
   // Subscribe to topic/game/{gameSessionToken}
-  const subscribeToGame = (callback: (message: any) => void) => {
+  type GameMessage = { 
+    actionType: string; 
+    payload?: Record<string, unknown>;
+  };
+  const subscribeToGame = (callback: (message: GameMessage) => void) => { 
     if (!clientRef.current || !clientRef.current.connected) return () => {};
     const subscription = clientRef.current.subscribe(
       `/game/topic/${gameSessionToken}`,
@@ -29,7 +33,11 @@ const useGameSocket = ({ gameSessionToken, authToken }: UseGameSocketProps) => {
   };
 
   // Subscribe to topic/user/{authToken}
-  const subscribeToUser = (callback: (message: any) => void) => {
+  type UserMessage = { 
+    actionType: string; 
+    payload?: Record<string, unknown>;
+  };
+  const subscribeToUser = (callback: (message: UserMessage) => void) => {
     if (!clientRef.current || !clientRef.current.connected) return () => {};
     const subscription = clientRef.current.subscribe(
       `/game/topic/user/${authToken}`,

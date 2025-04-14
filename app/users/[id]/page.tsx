@@ -1,4 +1,4 @@
-/*"use client";
+"use client";
 
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -26,7 +26,7 @@ const Profile: React.FC = () => {
             try {
                 const response = await apiService.get<User>(`/users/${id}`);
                 setUser(response);
-            } catch (error) {
+            } catch {
                 message.error("Failed to fetch user profile.");
                 router.push("/login");
             } finally {
@@ -41,7 +41,8 @@ const Profile: React.FC = () => {
         return <Spin size="large" className="loading-spinner" />;
     }
 
-    if (!user || user.id.toString() !== id) {
+    /*if (!user || user.id.toString() !== id) { */
+    if (!user || !user.id || user.id.toString() !== id) {
         message.error("Unauthorized access.");
         router.push("/login");
         return null;
@@ -51,11 +52,10 @@ const Profile: React.FC = () => {
         <div className="profile-container">
             <Card title="User Profile" bordered className="profile-card">
                 <p><strong>Username:</strong> {user.username}</p>
-                <Button type="primary" onClick={() => router.push("/")}>Go Home</Button>
+                <Button type="primary" onClick={() => router.push("/main")}>Go Home</Button>
             </Card>
         </div>
     );
 };
 
 export default Profile;
-*/
