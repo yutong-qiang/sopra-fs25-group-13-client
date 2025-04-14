@@ -84,7 +84,7 @@ export default function GameSessionPage() {
     useEffect(() => {
         if (timeLeft <= 0) {
             const votedForParam = vote || 'none';
-            router.push(`/results?votedFor=${encodeURIComponent(votedForParam)}`);
+            router.push('/results/chameleonCaught');
         }
     }, [timeLeft, vote, router]);
 

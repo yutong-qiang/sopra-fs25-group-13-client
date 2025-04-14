@@ -1,17 +1,18 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 import "@/styles/home.css";
 /*import useLocalStorage from "@/hooks/useLocalStorage";*/
 import {useEffect} from "react";
 
 const Chameleon: React.FC = () => {
     const router = useRouter();
+    const { gameToken } = useParams();
     /*const { value: id } = useLocalStorage<string>("id", "");*/
 
     useEffect(() => {
         const timeout = setTimeout(() => {
-            router.push(`/main`);
+            router.push(`/role/chameleon/${gameToken}`);
         }, 10000); //10 seconds
 
         return () => clearTimeout(timeout);
