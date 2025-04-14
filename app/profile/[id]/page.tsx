@@ -16,7 +16,7 @@ const Profile: React.FC = () => {
     const { value: token } = useLocalStorage<string>("token", "");
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-    const [unauthorized, setUnauthorized] = useState(false);
+    /*const [unauthorized, setUnauthorized] = useState(false);*/
 
     useEffect(() => {
 
@@ -30,7 +30,7 @@ const Profile: React.FC = () => {
                 }
             } catch {
                 message.error("Failed to fetch user profile.");
-                setUnauthorized(true);
+                /*setUnauthorized(true);*/
             } finally {
                 setLoading(false);
             }
@@ -40,16 +40,21 @@ const Profile: React.FC = () => {
     }, [id, token, apiService, router]);
 
     useEffect(() => {
-        if (unauthorized) {
-            router.push("/login");
-        }
-    }, [unauthorized, router]);
+        const timer = setTimeout(() => {
+            if (!token) {
+                router.push("/login");
+            }
+            setLoading(false);
+        }, 100);
+
+        return () => clearTimeout(timer);
+    }, [token, router]);
 
     if (loading) {
         return <Spin size="large" className="loading-spinner" />;
     }
 
-    if (!user || user.id?.toString() !== id) {
+    if (!token) {
         return null;
     }
 
@@ -57,7 +62,7 @@ const Profile: React.FC = () => {
         <div className="home-container">
             <div className="button-container">
                 <Image src="/chameleon.png" alt="Chameleon Avatar" width={180} height={180} />
-                <h1 className="text-white text-2xl font-bold mt-4 underline">{user.username}</h1>
+                <h1 className="text-white text-2xl font-bold mt-4 underline">{user?.username}</h1>
                 <p className="text-white text-xl font-semibold mt-6">
                     GAMES PLAYED: 0
                 </p>
@@ -67,7 +72,7 @@ const Profile: React.FC = () => {
                 <div className="flex justify-around mt-8">
                     <button
                         className="home-button"
-                        onClick={() => router.push("/rules")}
+                        onClick={() => router.push("/role/player")}
                     >
                         RULES
                     </button>

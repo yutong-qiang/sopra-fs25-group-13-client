@@ -203,6 +203,10 @@ export default function GameSessionPage() {
     router.push(`/main`); 
   };
 
+    const handleVote = () => {
+        router.push(`/game/voting/${gameToken}`);
+    };
+
   return (
     <div className="home-container" style={{ 
       display: 'flex', 
@@ -423,6 +427,12 @@ export default function GameSessionPage() {
             <li style={{ marginBottom: '10px' }}>SUMMER</li>
             <li style={{ marginBottom: '10px' }}>INSECT</li>
           </ul>
+            <button
+                onClick={handleVote}
+                className="home-button"
+            >
+                START VOTING
+            </button>
         </div>
       </div>
     </div>

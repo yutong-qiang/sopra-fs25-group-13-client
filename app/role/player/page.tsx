@@ -16,7 +16,7 @@ const Player: React.FC = () => {
         setSecretWord(words[randomIndex]);
 
         const timeout = setTimeout(() => {
-            router.push(`main`);
+            router.push(`/main`);
         }, 10000); //10 seconds
 
         return () => clearTimeout(timeout);
