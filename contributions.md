@@ -66,8 +66,8 @@ reason).
 
 | **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| **[@githubUser1]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| Katie | 11.4.25   | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/a5332b69c6596bb328291fc3ff60bcae394b9a2b | UI design for game session including wordlist. | This is important because the game session happens on it, also the voting is following up on that. |
+| Katie             | 12.04.25  | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/a5332b69c6596bb328291fc3ff60bcae394b9a2b | Connecting websockets in frontend.| Entire game session will use websockets so frontend needs to connect with the backend on websockets. |
 | Yutong | 11.04.25  | https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/785648d0e3beca80421ac263c6f52a54daf87a42 | added code implementations based on API endpoints in M2. Adjusted tests also according to the specifications #161, #162, #164 | to have a complete function for supporting the game  |
 | Yutong | 13.04.25 | https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/119103f560f9de8da54000bdaa2fa8935b2ebc00 | list of words databse & picking out a random word for normal players and nothing for chameleon, #55, #131, #132, #133  | players get a randomly chosen word and can start with the game. |
 | Lorenzo | 13.04.2025   | https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/bb494b95501ab0040b42438b15d9bc7b97ece10e | #168 Added handling for the "GIVE_HINT" player action. | This action is a pivotal action in the game logic, in which players give a clue about the secret word. |
