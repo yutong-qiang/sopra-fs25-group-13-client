@@ -9,9 +9,8 @@ export default function JoinGameSession() {
   const router = useRouter();
 
   const handleEnter = () => {
-    if (sessionId.trim()) {
-      // TODO: Implement the logic to join the game session
-      console.log('Joining session:', sessionId);
+    if (sessionId) {
+      router.push(`/game/join/${sessionId}`);
     }
   };
 
