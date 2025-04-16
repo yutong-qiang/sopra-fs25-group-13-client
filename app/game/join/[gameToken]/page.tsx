@@ -44,7 +44,7 @@ export default function GameSessionPage() {
                     console.log('📨 Message received:', data);
 
                     if (data.actionType === 'START_GAME') {
-                        router.push('/game/voting');
+                        router.push(`/role/chameleon/${gameToken}`);
                     }
                 });
             },
@@ -128,10 +128,10 @@ export default function GameSessionPage() {
 
         if (stompClient && stompClient.connected) {
             stompClient.publish({
-                destination: `/app/game/start`,
+                destination: `/game/start`,
                 body: JSON.stringify({ type: 'START_GAME', gameSessionToken: gameToken })
             });
-            router.push(`/role/chameleon/${gameToken}`);
+            /*router.push(`/role/chameleon/${gameToken}`);*/
 
         } else {
             console.error('❌ STOMP client not connected');

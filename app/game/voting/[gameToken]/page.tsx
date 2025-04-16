@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { connect, Room, LocalParticipant, RemoteParticipant, LocalTrackPublication, RemoteTrackPublication, Track, LocalVideoTrack, RemoteVideoTrack, createLocalTracks } from 'twilio-video';
+import { connect, Room, LocalParticipant, RemoteParticipant, RemoteTrackPublication, Track, LocalVideoTrack, RemoteVideoTrack, createLocalTracks } from 'twilio-video';
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import '../../../styles/home.css';
@@ -27,17 +27,17 @@ export default function GameSessionPage() {
     const [room, setRoom] = useState<Room | null>(null);
     const [localParticipant, setLocalParticipant] = useState<LocalParticipant | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(10);
-    const [participants, setParticipants] = useState<RemoteParticipant[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [playerOrder, setPlayerOrder] = useState<string[]>([]);
+    /*const [participants, setParticipants] = useState<RemoteParticipant[]>([]);*/
+    /*const [isLoading, setIsLoading] = useState(true);*/
+    /*const [error, setError] = useState<string | null>(null);*/
+    /*const [playerOrder, setPlayerOrder] = useState<string[]>([]);*/
     const [currentSpeakingPlayer, setCurrentSpeakingPlayer] = useState<string>('');
     const localVideoRef = useRef<HTMLDivElement>(null);
     const remoteVideoRef = useRef<HTMLDivElement>(null);
     const centerVideoRef = useRef<HTMLDivElement>(null);
     const apiService = useApi();
     const { value: token } = useLocalStorage<string>("token", "");
-    const [messages, setMessages] = useState<string[]>([]);
+    /*const [messages, setMessages] = useState<string[]>([]);*/
     const videoBoxStyle = {
         backgroundColor: '#000',
         minHeight: '150px',
@@ -48,7 +48,7 @@ export default function GameSessionPage() {
     };
 
     const [hasVoted, setHasVoted] = useState(false);
-    const [voteResults, setVoteResults] = useState<Record<string, number>>({});
+    /*const [voteResults, setVoteResults] = useState<Record<string, number>>({});*/
     const [vote, setVote] = useState<string | null>(null);
 
     const handleVote = (playerId: string) => {
@@ -65,10 +65,10 @@ export default function GameSessionPage() {
         console.log(`Voted for: ${playerId}`);
 
 
-        setVoteResults(prev => ({
+        /*setVoteResults(prev => ({
             ...prev,
             [playerId]: (prev[playerId] || 0) + 1
-        }));
+        }));*/
     };
 
     useEffect(() => {
@@ -83,7 +83,7 @@ export default function GameSessionPage() {
 
     useEffect(() => {
         if (timeLeft <= 0) {
-            const votedForParam = vote || 'none';
+            /*const votedForParam = vote || 'none';*/
             router.push('/results/chameleonCaught');
         }
     }, [timeLeft, vote, router]);
@@ -92,7 +92,7 @@ export default function GameSessionPage() {
     useEffect(() => {
         const connectToVideoRoom = async () => {
             try {
-                setIsLoading(true);
+                /*setIsLoading(true);*/
 
                 const response = await apiService.post<VideoResponse>(`/game/join/${gameToken}`, null, {
                     headers: {
@@ -124,7 +124,7 @@ export default function GameSessionPage() {
                 setLocalParticipant(localParticipant);
 
                 // Set mock data first
-                setPlayerOrder([localParticipant.identity, 'player2', 'player3', 'player4', 'player5']);
+                /*setPlayerOrder([localParticipant.identity, 'player2', 'player3', 'player4', 'player5']);*/
                 setCurrentSpeakingPlayer(localParticipant.identity);
 
                 // Then handle video tracks
@@ -152,18 +152,18 @@ export default function GameSessionPage() {
 
                 videoRoom.participants.forEach(handleParticipantConnected);
                 videoRoom.on('participantConnected', handleParticipantConnected);
-                videoRoom.on('participantDisconnected', handleParticipantDisconnected);
+                /*videoRoom.on('participantDisconnected', handleParticipantDisconnected);*/
 
-                setIsLoading(false);
+                /*setIsLoading(false);*/
             } catch (error) {
                 console.error('Error connecting to video room:', error);
-                setError(error instanceof Error ? error.message : 'Failed to connect to video room');
-                setIsLoading(false);
+                /*setError(error instanceof Error ? error.message : 'Failed to connect to video room');*/
+                /*setIsLoading(false);*/
             }
         };
 
         const handleParticipantConnected = (participant: RemoteParticipant) => {
-            setParticipants(prevParticipants => [...prevParticipants, participant]);
+            /*setParticipants(prevParticipants => [...prevParticipants, participant]);*/
 
             participant.tracks.forEach((publication: RemoteTrackPublication) => {
                 if (publication.track) {
@@ -211,11 +211,11 @@ export default function GameSessionPage() {
             });
         };
 
-        const handleParticipantDisconnected = (participant: RemoteParticipant) => {
+        /*const handleParticipantDisconnected = (participant: RemoteParticipant) => {
             setParticipants(prevParticipants =>
                 prevParticipants.filter(p => p !== participant)
             );
-        };
+        };*/
 
         if (gameToken && token) {
             connectToVideoRoom();
@@ -235,10 +235,10 @@ export default function GameSessionPage() {
             console.log('WebSocket connection established');
         };
 
-        socket.onmessage = (event) => {
+        /*socket.onmessage = (event) => {
             const newMessage = event.data;
             setMessages((prevMessages) => [...prevMessages, newMessage]);
-        };
+        };*/
 
         socket.onclose = () => {
             console.log('WebSocket connection closed');
@@ -253,9 +253,9 @@ export default function GameSessionPage() {
         };
     }, []);
 
-    const handleReturn = () => {
+    /*const handleReturn = () => {
         router.push(`/main`);
-    };
+    };*/
 
     return (
         <div className="home-container" style={{
@@ -307,7 +307,11 @@ export default function GameSessionPage() {
                                 borderRadius: '5px',
                                 cursor: hasVoted || localParticipant?.identity === 'localParticipantId' ? 'default' : 'pointer'
                             }}
-                            onClick={() => handleVote(localParticipant?.identity)} // Pass the local participant's identity here
+                            onClick={() => {
+                                if (localParticipant?.identity) {
+                                    handleVote(localParticipant.identity);
+                                }
+                            }} // Pass the local participant's identity here
                         >
                             VOTE
                         </button>

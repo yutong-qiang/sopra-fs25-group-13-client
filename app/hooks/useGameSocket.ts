@@ -16,12 +16,15 @@ type UseGameSocketProps = {
 const useGameSocket = ({ gameSessionToken, authToken }: UseGameSocketProps) => {
   const clientRef = useRef<Client | null>(null);
 
+  const sock: unknown = new SockJS(process.env.NEXT_PUBLIC_SOCKET_URL!);
+
+// You would then need to narrow the type before using it
+  if (sock instanceof SockJS) {
+    // You can now safely use SockJS methods
+  }
+
   // Subscribe to topic/game/{gameSessionToken}
-  type GameMessage = { 
-    actionType: string; 
-    payload?: Record<string, unknown>;
-  };
-  const subscribeToGame = (callback: (message: GameMessage) => void) => { 
+  const subscribeToGame = (callback: (message: unknown) => void) => {
     if (!clientRef.current || !clientRef.current.connected) return () => {};
     const subscription = clientRef.current.subscribe(
       `/game/topic/${gameSessionToken}`,
@@ -33,11 +36,7 @@ const useGameSocket = ({ gameSessionToken, authToken }: UseGameSocketProps) => {
   };
 
   // Subscribe to topic/user/{authToken}
-  type UserMessage = { 
-    actionType: string; 
-    payload?: Record<string, unknown>;
-  };
-  const subscribeToUser = (callback: (message: UserMessage) => void) => {
+  const subscribeToUser = (callback: (message: unknown) => void) => {
     if (!clientRef.current || !clientRef.current.connected) return () => {};
     const subscription = clientRef.current.subscribe(
       `/game/topic/user/${authToken}`,
@@ -56,7 +55,7 @@ const useGameSocket = ({ gameSessionToken, authToken }: UseGameSocketProps) => {
     };
 
     clientRef.current.publish({
-      destination: "/app/game/player-action",
+      destination: "/game/player-action",
       headers: {
         "auth-token": authToken,
       },
@@ -71,7 +70,7 @@ const useGameSocket = ({ gameSessionToken, authToken }: UseGameSocketProps) => {
   useEffect(() => {
     if (!authToken || !gameSessionToken) return;
 
-    const sock = new SockJS(process.env.NEXT_PUBLIC_SOCKET_URL!);
+    const sock = new SockJS("http://localhost:8080/game-ws");
     const client = new Client({
       webSocketFactory: () => sock,
       reconnectDelay: 5000,
