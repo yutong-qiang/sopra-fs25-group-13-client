@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { connect, createLocalTracks, LocalVideoTrack, RemoteVideoTrack, Room, Track, RemoteParticipant } from 'twilio-video';
+import { connect, createLocalTracks, LocalVideoTrack, RemoteVideoTrack, Room, Track, RemoteParticipant, LocalTrack } from 'twilio-video';
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import SockJS from 'sockjs-client';
@@ -14,6 +14,7 @@ interface VideoResponse {
     gameToken: string;
     twilioVideoChatToken: string;
     twilioRoomSid: string;
+    username: string;
 }
 
 export default function GameSessionPage() {
@@ -25,8 +26,13 @@ export default function GameSessionPage() {
     const [room, setRoom] = useState<Room | null>(null);
     const [participants, setParticipants] = useState<RemoteParticipant[]>([]);
     const localVideoRef = useRef<HTMLDivElement>(null);
-    const remoteVideoRef = useRef<HTMLDivElement>(null);
+    const remoteVideoRefs = useRef<Array<HTMLDivElement | null>>([]);
     const wsRef = useRef<Client | null>(null);
+
+    // Initialize refs array
+    useEffect(() => {
+        remoteVideoRefs.current = Array(7).fill(null); // 7 remote players max
+    }, []);
 
     // === WebSocket Setup using STOMP over SockJS ===
     useEffect(() => {
@@ -66,31 +72,63 @@ export default function GameSessionPage() {
         if (!gameToken || !token) return;
 
         const setupVideo = async () => {
-            const localTracks = await createLocalTracks({ audio: true, video: { width: 640 } });
-
-            const response = await apiService.post<VideoResponse>(`/game/join/${gameToken}`, null, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'application/json'
+            try {
+                let localTracks: LocalTrack[] = [];
+                try {
+                localTracks = await createLocalTracks({ audio: true, video: { width: 640 } });
+                console.log('Created local tracks');
+                } catch (err) {
+                console.warn("⚠️ Could not create local tracks:", err);
+                // Still let the user join the room even without media
                 }
-            });
 
-            const room = await connect(response.twilioVideoChatToken, {
-                name: response.twilioRoomSid,
-                tracks: localTracks
-            });
+                const response = await apiService.post<VideoResponse>(`/game/join/${gameToken}`, null, {
+                    headers: {
+                        'Authorization': token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log('Join response:', {
+                    roomSid: response.twilioRoomSid,
+                    token: response.twilioVideoChatToken?.substring(0, 10) + '...' // Only log part of the token
+                });
 
-            setRoom(room);
+                const room = await connect(response.twilioVideoChatToken, {
+                    name: response.twilioRoomSid,
+                    tracks: localTracks
+                });
+                console.log("🧩 Room SID connected to:", room.sid);
 
-            const localTrack = localTracks.find(t => t.kind === 'video') as LocalVideoTrack;
-            if (localVideoRef.current) {
-                const el = localTrack.attach();
-                localVideoRef.current.appendChild(el);
+                console.log('Initial room state:', {
+                    roomName: room.name,
+                    participantCount: room.participants.size,
+                    participantIdentities: Array.from(room.participants.values()).map(p => p.identity),
+                    localIdentity: room.localParticipant.identity
+                });
+
+                setRoom(room);
+                room.participants.forEach(participant => {
+                    handleParticipantConnected(participant);
+                });
+
+                room.on('participantConnected', handleParticipantConnected);
+                room.on('participantDisconnected', handleParticipantDisconnected);
+
+
+                const localTrack = localTracks.find(t => t.kind === 'video') as LocalVideoTrack;
+                if (localVideoRef.current) {
+                    if (localTrack) {
+                        const el = localTrack.attach();
+                        styleVideoElement(el);
+                        localVideoRef.current.innerHTML = '';
+                        localVideoRef.current.appendChild(el);
+                    } else {
+                        localVideoRef.current.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">You</p>`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error in setupVideo:', error);
             }
-
-            room.participants.forEach(handleParticipantConnected);
-            room.on('participantConnected', handleParticipantConnected);
-            room.on('participantDisconnected', handleParticipantDisconnected);
         };
 
         setupVideo();
@@ -102,25 +140,72 @@ export default function GameSessionPage() {
         };
     }, [gameToken, token]);
 
-    const handleParticipantConnected = (participant: RemoteParticipant) => {
-        setParticipants(prev => [...prev, participant]);
-        participant.tracks.forEach(pub => {
-            if (pub.track && pub.track.kind === 'video' && remoteVideoRef.current) {
-                const videoElement = (pub.track as RemoteVideoTrack).attach();
-                remoteVideoRef.current.appendChild(videoElement);
-            }
-        });
+    useEffect(() => {
+        console.log('Current participants:', participants.length);
+    }, [participants]);
 
-        participant.on('trackSubscribed', (track: Track) => {
-            if (track.kind === 'video' && remoteVideoRef.current) {
-                const videoElement = (track as RemoteVideoTrack).attach();
-                remoteVideoRef.current.appendChild(videoElement);
+    const handleParticipantConnected = (participant: RemoteParticipant) => {
+        console.log('New participant joined:', {
+            identity: participant.identity,
+            currentParticipants: participants.length,
+            newTotal: participants.length + 1
+        });
+    
+        setParticipants(prev => [...prev, participant]);
+    
+        // Find first empty video container
+        const emptyIndex = remoteVideoRefs.current.findIndex(ref => ref && !ref.hasChildNodes());
+        if (emptyIndex === -1) return;
+        const currentRef = remoteVideoRefs.current[emptyIndex];
+        if (!currentRef) return;
+    
+        let videoAttached = false;
+    
+        participant.tracks.forEach(pub => {
+            if (pub.track && pub.track.kind === 'video') {
+                const videoElement = (pub.track as RemoteVideoTrack).attach();
+                styleVideoElement(videoElement);
+                currentRef.innerHTML = '';
+                currentRef.appendChild(videoElement);
+                videoAttached = true;
             }
         });
+    
+        participant.on('trackSubscribed', (track: Track) => {
+            if (track.kind === 'video') {
+                const videoElement = (track as RemoteVideoTrack).attach();
+                styleVideoElement(videoElement);
+                currentRef.innerHTML = '';
+                currentRef.appendChild(videoElement);
+                videoAttached = true;
+            }
+        });
+    
+        if (!videoAttached) {
+            currentRef.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${participant.identity}</p>`;
+        }
     };
+    
+    const styleVideoElement = (video: HTMLMediaElement) => {
+        const videoElement = video as HTMLVideoElement;
+        videoElement.style.width = '100%';
+        videoElement.style.height = '100%';
+        videoElement.style.objectFit = 'cover';
+    };
+    
+    
 
     const handleParticipantDisconnected = (participant: RemoteParticipant) => {
         setParticipants(prev => prev.filter(p => p !== participant));
+        // Clear the video element containing this participant's video
+        remoteVideoRefs.current.forEach(ref => {
+            if (ref && ref.hasChildNodes()) {
+                const video = ref.querySelector('video');
+                if (video && video.srcObject === participant.videoTracks.values().next().value?.track) {
+                    ref.innerHTML = '';
+                }
+            }
+        });
     };
 
     const handleStartGame = () => {
@@ -169,90 +254,26 @@ export default function GameSessionPage() {
                 overflow: 'hidden'
               }}
             />
-            <div
-              ref={remoteVideoRef}
-              className="video-element"
-              style={{
-                backgroundColor: '#000',
-                minHeight: '150px',
-                minWidth: '150px',
-                border: '2px solid #49beb7',
-                borderRadius: '8px',
-                overflow: 'hidden'
-              }}
-            />
-            <div
-              ref={remoteVideoRef}
-              className="video-element"
-              style={{
-                backgroundColor: '#000',
-                minHeight: '150px',
-                minWidth: '150px',
-                border: '2px solid #49beb7',
-                borderRadius: '8px',
-                overflow: 'hidden'
-              }}
-            />
-            <div
-              ref={remoteVideoRef}
-              className="video-element"
-              style={{
-                backgroundColor: '#000',
-                minHeight: '150px',
-                minWidth: '150px',
-                border: '2px solid #49beb7',
-                borderRadius: '8px',
-                overflow: 'hidden'
-              }}
-            />
-            <div
-              ref={remoteVideoRef}
-              className="video-element"
-              style={{
-                backgroundColor: '#000',
-                minHeight: '150px',
-                minWidth: '150px',
-                border: '2px solid #49beb7',
-                borderRadius: '8px',
-                overflow: 'hidden'
-              }}
-            />
-            <div
-              ref={remoteVideoRef}
-              className="video-element"
-              style={{
-                backgroundColor: '#000',
-                minHeight: '150px',
-                minWidth: '150px',
-                border: '2px solid #49beb7',
-                borderRadius: '8px',
-                overflow: 'hidden'
-              }}
-            />
-            <div
-              ref={remoteVideoRef}
-              className="video-element"
-              style={{
-                backgroundColor: '#000',
-                minHeight: '150px',
-                minWidth: '150px',
-                border: '2px solid #49beb7',
-                borderRadius: '8px',
-                overflow: 'hidden'
-              }}
-            />
-            <div
-              ref={remoteVideoRef}
-              className="video-element"
-              style={{
-                backgroundColor: '#000',
-                minHeight: '150px',
-                minWidth: '150px',
-                border: '2px solid #49beb7',
-                borderRadius: '8px',
-                overflow: 'hidden'
-              }}
-            />
+            {/* Create 7 remote video containers with unique refs */}
+            {Array(7).fill(null).map((_, index) => (
+                <div
+                    key={index}
+                    ref={(el: HTMLDivElement | null) => {
+                        if (remoteVideoRefs.current) {
+                            remoteVideoRefs.current[index] = el;
+                        }
+                    }}
+                    className="video-element"
+                    style={{
+                        backgroundColor: '#000',
+                        minHeight: '150px',
+                        minWidth: '150px',
+                        border: '2px solid #49beb7',
+                        borderRadius: '8px',
+                        overflow: 'hidden'
+                    }}
+                />
+            ))}
           </div>
         </div>
 
@@ -274,6 +295,15 @@ export default function GameSessionPage() {
           </div>
           <div style={{ fontSize: '1.5rem', opacity: 0.9 }}>
             ({participants.length + 1}/8 players)
+          </div>
+          <div style={{ fontSize: '1.2rem', color: 'white', marginBottom: '10px' }}>
+            Connected Players: {participants.length + 1} {/* +1 for local participant */}
+            <ul>
+                <li>You (Local)</li>
+                {participants.map((p, index) => (
+                    <li key={index}>{p.identity}</li>
+                ))}
+            </ul>
           </div>
           <div className="flex gap-4 w-full" style={{ marginTop: '20px' }}>
                 <button
