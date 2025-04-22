@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { connect, createLocalTracks, LocalVideoTrack, RemoteVideoTrack, Room, Track, RemoteParticipant, LocalTrack } from 'twilio-video';
+import { connect, createLocalTracks, LocalVideoTrack, RemoteVideoTrack, RemoteAudioTrack, Room, Track, RemoteParticipant, LocalTrack } from 'twilio-video';
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import SockJS from 'sockjs-client';
@@ -169,6 +169,12 @@ export default function GameSessionPage() {
                 currentRef.appendChild(videoElement);
                 videoAttached = true;
             }
+            else if (pub.track && pub.track.kind === 'audio') {
+                const audioElement = (pub.track as RemoteAudioTrack).attach();
+                audioElement.style.display = 'none';
+                document.body.appendChild(audioElement);
+              }
+          
         });
     
         participant.on('trackSubscribed', (track: Track) => {
@@ -179,6 +185,12 @@ export default function GameSessionPage() {
                 currentRef.appendChild(videoElement);
                 videoAttached = true;
             }
+            if (track.kind === 'audio') {
+                const audioElement = (track as RemoteAudioTrack).attach();
+                audioElement.style.display = 'none'; // hide it
+                document.body.appendChild(audioElement); // or attach to the container
+              }
+            
         });
     
         if (!videoAttached) {
