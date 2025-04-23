@@ -37,8 +37,45 @@ export default function GameSessionPage() {
     // === WebSocket Setup using STOMP over SockJS ===
     useEffect(() => {
         if (!token || !gameToken) return;
+        const isLocal = typeof window !== "undefined" && window.location.hostname === "localhost";
 
         const stompClient = new Client({
+          webSocketFactory: () => new SockJS(
+            isLocal 
+              ? 'http://localhost:8080/game-ws' 
+              : 'https://sopra-fs24-group-13-server.oa.r.appspot.com/game-ws'
+          ),
+          reconnectDelay: 5000,
+          debug: (str) => console.log(str),
+          onConnect: () => {
+            console.log('✅ STOMP connected');
+
+            stompClient.subscribe(`/game/topic/${gameToken}`, (message) => {
+              const data = JSON.parse(message.body);
+              console.log('📨 Message received:', data);
+
+              if (data.actionType === 'START_GAME') {
+                router.push(`/role/chameleon/${gameToken}`);
+              }
+            });
+          },
+          onStompError: (frame) => {
+            console.error('STOMP error:', frame.headers['message'], frame.body);
+          }
+        });
+
+        stompClient.activate();
+        wsRef.current = stompClient;
+
+        return () => {
+            if (stompClient) {
+                stompClient.deactivate();
+                wsRef.current = null;
+            }
+        };
+    }, [token, gameToken]);
+
+    /*const stompClient = new Client({
             webSocketFactory: () => new SockJS('http://localhost:8080/game-ws'),
             reconnectDelay: 5000,
             debug: (str) => console.log(str),
@@ -57,15 +94,7 @@ export default function GameSessionPage() {
             onStompError: (frame) => {
                 console.error('STOMP error:', frame.headers['message'], frame.body);
             }
-        });
-
-        stompClient.activate();
-        wsRef.current = stompClient;
-
-        return () => {
-            stompClient.deactivate();
-        };
-    }, [token, gameToken]);
+        }); */
 
     // === Twilio Video Setup ===
     useEffect(() => {
