@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { connect, createLocalTracks, LocalVideoTrack, RemoteVideoTrack, RemoteAudioTrack, Room, Track, RemoteParticipant, LocalTrack } from 'twilio-video';
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
-//import SockJS from 'sockjs-client';
+import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import '../../../styles/home.css';
 
@@ -40,7 +40,7 @@ export default function GameSessionPage() {
         const isLocal = typeof window !== "undefined" && window.location.hostname === "localhost";
 
         const stompClient = new Client({
-          webSocketFactory: () => new WebSocket(
+          webSocketFactory: () => new SockJS(
             isLocal
               ? 'http://localhost:8080/game-ws'
               : 'https://sopra-fs25-group-13-server.oa.r.appspot.com/game-ws'
@@ -74,27 +74,6 @@ export default function GameSessionPage() {
             }
         };
     }, [token, gameToken]);
-
-    /*const stompClient = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:8080/game-ws'),
-            reconnectDelay: 5000,
-            debug: (str) => console.log(str),
-            onConnect: () => {
-                console.log('✅ STOMP connected');
-
-                stompClient.subscribe(`/game/topic/${gameToken}`, (message) => {
-                    const data = JSON.parse(message.body);
-                    console.log('📨 Message received:', data);
-
-                    if (data.actionType === 'START_GAME') {
-                        router.push(`/role/chameleon/${gameToken}`);
-                    }
-                });
-            },
-            onStompError: (frame) => {
-                console.error('STOMP error:', frame.headers['message'], frame.body);
-            }
-        }); */
 
     // === Twilio Video Setup ===
     useEffect(() => {
@@ -260,7 +239,6 @@ export default function GameSessionPage() {
                     'auth-token': token
                 }
             });
-            /*router.push(`/role/chameleon/${gameToken}`);*/
 
         } else {
             console.error('❌ STOMP client not connected');
