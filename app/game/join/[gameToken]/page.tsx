@@ -43,7 +43,7 @@ export default function GameSessionPage() {
           webSocketFactory: () => new SockJS(
             isLocal
               ? 'http://localhost:8080/game-ws'
-              : 'https://sopra-fs24-group-13-server.oa.r.appspot.com/game-ws'
+              : 'wss://sopra-fs24-group-13-server.oa.r.appspot.com/game-ws'
           ),
           reconnectDelay: 5000,
           debug: (str) => console.log(str),
@@ -254,8 +254,11 @@ export default function GameSessionPage() {
 
         if (stompClient && stompClient.connected) {
             stompClient.publish({
-                destination: `/game/start`,
-                body: JSON.stringify({ type: 'START_GAME', gameSessionToken: gameToken })
+                destination: `/game/player-action`,
+                body: JSON.stringify({ actionType: 'START_GAME', gameSessionToken: gameToken }),
+                headers: {
+                    'auth-token': token
+                }
             });
             /*router.push(`/role/chameleon/${gameToken}`);*/
 
