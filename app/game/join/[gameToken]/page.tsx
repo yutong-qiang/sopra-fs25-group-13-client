@@ -43,7 +43,7 @@ export default function GameSessionPage() {
           webSocketFactory: () => new SockJS(
             isLocal
               ? 'http://localhost:8080/game-ws'
-              : 'https://sopra-fs24-group-13-server.oa.r.appspot.com/game-ws'
+              : 'https://sopra-fs25-group-13-server.oa.r.appspot.com/game-ws'
           ),
           reconnectDelay: 5000,
           debug: (str) => console.log(str),
