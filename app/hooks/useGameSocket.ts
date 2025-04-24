@@ -70,7 +70,13 @@ const useGameSocket = ({ gameSessionToken, authToken }: UseGameSocketProps) => {
   useEffect(() => {
     if (!authToken || !gameSessionToken) return;
 
-    const sock = new SockJS("http://localhost:8080/game-ws");
+    const sock = new SockJS(
+        process.env.NEXT_PUBLIC_SOCKET_URL ||
+        (typeof window !== "undefined" && window.location.hostname === "localhost"
+          ? "http://localhost:8080/game-ws"
+          : "https://sopra-fs24-group-13-server.oa.r.appspot.com/game-ws")
+      );
+      
     const client = new Client({
       webSocketFactory: () => sock,
       reconnectDelay: 5000,
