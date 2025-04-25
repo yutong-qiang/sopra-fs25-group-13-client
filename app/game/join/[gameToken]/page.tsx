@@ -36,7 +36,7 @@ export default function GameSessionPage() {
     const [phase, setPhase] = useState<Phase>('lobby');
 
     const [guessInput, setGuessInput] = useState('');
-    const [messages] = useState<string[]>([]);
+    const [messages, setMessages] = useState<string[]>([]);
 
     // Initialize refs array
     useEffect(() => {
@@ -75,6 +75,11 @@ export default function GameSessionPage() {
                     setSecretWord(data.secretWord);
                     //setGameStarted(true);
                     setPhase('game');
+                }
+                if (data.actionType === 'GIVE_HINT') {
+                    if (data.actionContent) {
+                        setMessages(prev => [...prev, data.actionContent]);
+                    }
                 }
             });
           },
@@ -415,8 +420,7 @@ export default function GameSessionPage() {
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '20px',
-                            marginRight: '100px',
-                            marginLeft: '-100px'
+                            justifyContent: 'center'
                         }}>
                             <div style={{
                                 backgroundColor: '#49beb7',
@@ -482,8 +486,11 @@ export default function GameSessionPage() {
                                             // Send to WebSocket server
                                             if (wsRef.current && wsRef.current.connected) {
                                                 wsRef.current.publish({
-                                                    destination: '/app/game/player-action',
+                                                    destination: '/game/player-action',
                                                     body: JSON.stringify(payload),
+                                                    headers: {
+                                                        'auth-token': token
+                                                    }
                                                 });
                                             } else {
                                                 console.warn('WebSocket not connected');
@@ -515,8 +522,7 @@ export default function GameSessionPage() {
                             border: '2px solid #49beb7',
                             borderRadius: '8px',
                             padding: '15px',
-                            marginRight: '50px',
-                            marginLeft: '-50px'
+                            justifyContent: 'center'
                         }}>
                             <h2 style={{
                                 color: '#fff',
