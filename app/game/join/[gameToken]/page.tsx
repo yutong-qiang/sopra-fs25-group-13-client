@@ -1,8 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { connect, createLocalTracks, LocalVideoTrack, RemoteVideoTrack, RemoteAudioTrack, Room, Track, RemoteParticipant, LocalTrack } from 'twilio-video';
+import {
+    connect,
+    createLocalTracks,
+    LocalVideoTrack,
+    RemoteVideoTrack,
+    RemoteAudioTrack,
+    Room,
+    Track,
+    RemoteParticipant,
+    LocalTrack,
+    LocalParticipant
+} from 'twilio-video';
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import SockJS from 'sockjs-client';
@@ -28,19 +39,53 @@ export default function GameSessionPage() {
     const localVideoRef = useRef<HTMLDivElement>(null);
     const remoteVideoRefs = useRef<Array<HTMLDivElement | null>>([]);
     const wsRef = useRef<Client | null>(null);
-    //const [gameStarted, setGameStarted] = useState(false);
+
     const [secretWord, setSecretWord] = useState<string | null>(null);
     const [isChameleon, setIsChameleon] = useState<boolean>(false);
 
-    type Phase = 'lobby' | 'game' | 'voting';
+    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting';
     const [phase, setPhase] = useState<Phase>('lobby');
 
     const [guessInput, setGuessInput] = useState('');
     const [messages, setMessages] = useState<string[]>([]);
 
-    // Initialize refs array
+    const videoBoxStyle = {
+        backgroundColor: '#000',
+        minHeight: '150px',
+        minWidth: '150px',
+        border: '2px solid #49beb7',
+        borderRadius: '8px',
+        overflow: 'hidden'
+    };
+
+    const [hasVoted, setHasVoted] = useState(false);
+    const [vote, setVote] = useState<string | null>(null);
+    const [localParticipant] = useState<LocalParticipant | null>(null);
+
+
+    const handleVote = (playerId: string) => {
+        if (hasVoted) return;
+        console.log(vote);
+
+        // stops self voting
+        if (localParticipant && playerId === localParticipant.identity) {
+            console.log('You cannot vote for yourself!');
+            return;
+        }
+
+        setHasVoted(true);
+        setVote(playerId);
+        console.log(`Voted for: ${playerId}`);
+
+
+        /*setVoteResults(prev => ({
+            ...prev,
+            [playerId]: (prev[playerId] || 0) + 1
+        }));*/
+    };
+
     useEffect(() => {
-        remoteVideoRefs.current = Array(7).fill(null); // 7 remote players max
+        remoteVideoRefs.current = Array(7).fill(null);
     }, []);
 
     // === WebSocket Setup using STOMP over SockJS ===
@@ -49,43 +94,48 @@ export default function GameSessionPage() {
         const isLocal = typeof window !== "undefined" && window.location.hostname === "localhost";
 
         const stompClient = new Client({
-          webSocketFactory: () => new SockJS(
-            isLocal
-              ? 'http://localhost:8080/game-ws'
-              : 'https://sopra-fs25-group-13-server.oa.r.appspot.com/game-ws'
-          ),
-          reconnectDelay: 5000,
-          debug: (str) => console.log(str),
-          onConnect: () => {
-            console.log('✅ STOMP connected');
+            webSocketFactory: () => new SockJS(
+                isLocal
+                    ? 'http://localhost:8080/game-ws'
+                    : 'https://sopra-fs25-group-13-server.oa.r.appspot.com/game-ws'
+            ),
+            reconnectDelay: 5000,
+            debug: (str) => console.log(str),
+            onConnect: () => {
+                console.log('✅ STOMP connected');
 
-            stompClient.subscribe(`/game/topic/${gameToken}`, (message) => {
-              const data = JSON.parse(message.body);
-              console.log('📨 Message received:', data);
+                stompClient.subscribe(`/game/topic/${gameToken}`, (message) => {
+                    const data = JSON.parse(message.body);
+                    console.log('📨 Message received:', data);
 
-              /*if (data.actionType === 'START_GAME') {
-                  if (data.isChameleon) {
-                      router.push(`/role/chameleon/roleWindow/${gameToken}`);
-                  } else {
-                      router.push(`/role/player/${gameToken}?word=${data.secretWord}&chameleon=${data.isChameleon}`);
-                  }
-              }*/
-                if (data.actionType === 'START_GAME') {
-                    setIsChameleon(data.isChameleon);
-                    setSecretWord(data.secretWord);
-                    //setGameStarted(true);
-                    setPhase('game');
-                }
-                if (data.actionType === 'GIVE_HINT') {
-                    if (data.actionContent) {
-                        setMessages(prev => [...prev, data.actionContent]);
+                    if (data.actionType === 'START_GAME') {
+                        setIsChameleon(data.isChameleon);
+                        setSecretWord(data.secretWord);
+                        localStorage.setItem('gameSessionActive', 'true');
+                        if (data.isChameleon == true){
+                            setPhase('role_chameleon');
+                        }
+                        if (data.isChameleon == false){
+                            setPhase('role_player');
+                        }
+
+                        setTimeout(() => {
+                            setPhase('game');
+                        }, 5000);
                     }
-                }
-            });
-          },
-          onStompError: (frame) => {
-            console.error('STOMP error:', frame.headers['message'], frame.body);
-          }
+                    if (data.actionType === 'GIVE_HINT') {
+                        if (data.actionContent) {
+                            setMessages(prev => [...prev, data.actionContent]);
+                        }
+                    }
+                    if (data.actionType === 'START_VOTING') {
+                        setPhase('voting');
+                    }
+                });
+            },
+            onStompError: (frame) => {
+                console.error('STOMP error:', frame.headers['message'], frame.body);
+            }
         });
 
         stompClient.activate();
@@ -107,11 +157,10 @@ export default function GameSessionPage() {
             try {
                 let localTracks: LocalTrack[] = [];
                 try {
-                localTracks = await createLocalTracks({ audio: true, video: { width: 640 } });
-                console.log('Created local tracks');
+                    localTracks = await createLocalTracks({ audio: true, video: { width: 640 } });
+                    console.log('Created local tracks');
                 } catch (err) {
-                console.warn("⚠️ Could not create local tracks:", err);
-                // Still let the user join the room even without media
+                    console.warn("⚠️ Could not create local tracks:", err);
                 }
 
                 const response = await apiService.post<VideoResponse>(`/game/join/${gameToken}`, null, {
@@ -120,22 +169,10 @@ export default function GameSessionPage() {
                         'Content-Type': 'application/json'
                     }
                 });
-                console.log('Join response:', {
-                    roomSid: response.twilioRoomSid,
-                    token: response.twilioVideoChatToken?.substring(0, 10) + '...' // Only log part of the token
-                });
 
                 const room = await connect(response.twilioVideoChatToken, {
                     name: response.twilioRoomSid,
                     tracks: localTracks
-                });
-                console.log("🧩 Room SID connected to:", room.sid);
-
-                console.log('Initial room state:', {
-                    roomName: room.name,
-                    participantCount: room.participants.size,
-                    participantIdentities: Array.from(room.participants.values()).map(p => p.identity),
-                    localIdentity: room.localParticipant.identity
                 });
 
                 setRoom(room);
@@ -145,7 +182,6 @@ export default function GameSessionPage() {
 
                 room.on('participantConnected', handleParticipantConnected);
                 room.on('participantDisconnected', handleParticipantDisconnected);
-
 
                 const localTrack = localTracks.find(t => t.kind === 'video') as LocalVideoTrack;
                 if (localVideoRef.current) {
@@ -172,27 +208,32 @@ export default function GameSessionPage() {
         };
     }, [gameToken, token]);
 
-    useEffect(() => {
-        console.log('Current participants:', participants.length);
-    }, [participants]);
+    // Re-attach local video when switching to the 'game' phase
+useEffect(() => {
+  if (phase === 'game' && room) {
+      const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
+
+      if (localTrack && localVideoRef.current) {
+          const el = localTrack.attach();
+          styleVideoElement(el);
+          localVideoRef.current.innerHTML = '';
+          localVideoRef.current.appendChild(el);
+      }
+  }
+}, [phase, room]);
+
+
 
     const handleParticipantConnected = (participant: RemoteParticipant) => {
-        console.log('New participant joined:', {
-            identity: participant.identity,
-            currentParticipants: participants.length,
-            newTotal: participants.length + 1
-        });
-    
         setParticipants(prev => [...prev, participant]);
-    
-        // Find first empty video container
+
         const emptyIndex = remoteVideoRefs.current.findIndex(ref => ref && !ref.hasChildNodes());
         if (emptyIndex === -1) return;
         const currentRef = remoteVideoRefs.current[emptyIndex];
         if (!currentRef) return;
-    
+
         let videoAttached = false;
-    
+
         participant.tracks.forEach(pub => {
             if (pub.track && pub.track.kind === 'video') {
                 const videoElement = (pub.track as RemoteVideoTrack).attach();
@@ -200,48 +241,34 @@ export default function GameSessionPage() {
                 currentRef.innerHTML = '';
                 currentRef.appendChild(videoElement);
                 videoAttached = true;
-            }
-            else if (pub.track && pub.track.kind === 'audio') {
+            } else if (pub.track && pub.track.kind === 'audio') {
                 const audioElement = (pub.track as RemoteAudioTrack).attach();
                 audioElement.style.display = 'none';
                 document.body.appendChild(audioElement);
-              }
-          
+            }
         });
-    
+
         participant.on('trackSubscribed', (track: Track) => {
             if (track.kind === 'video') {
                 const videoElement = (track as RemoteVideoTrack).attach();
                 styleVideoElement(videoElement);
                 currentRef.innerHTML = '';
                 currentRef.appendChild(videoElement);
-                videoAttached = true;
             }
             if (track.kind === 'audio') {
                 const audioElement = (track as RemoteAudioTrack).attach();
-                audioElement.style.display = 'none'; // hide it
-                document.body.appendChild(audioElement); // or attach to the container
-              }
-            
+                audioElement.style.display = 'none';
+                document.body.appendChild(audioElement);
+            }
         });
-    
+
         if (!videoAttached) {
             currentRef.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${participant.identity}</p>`;
         }
     };
-    
-    const styleVideoElement = (video: HTMLMediaElement) => {
-        const videoElement = video as HTMLVideoElement;
-        videoElement.style.width = '100%';
-        videoElement.style.height = '100%';
-        videoElement.style.objectFit = 'cover';
-    };
-    
-    
 
     const handleParticipantDisconnected = (participant: RemoteParticipant) => {
         setParticipants(prev => prev.filter(p => p !== participant));
-        // Clear the video element containing this participant's video
         remoteVideoRefs.current.forEach(ref => {
             if (ref && ref.hasChildNodes()) {
                 const video = ref.querySelector('video');
@@ -254,7 +281,6 @@ export default function GameSessionPage() {
 
     const handleStartGame = () => {
         const stompClient = wsRef.current;
-
         if (stompClient && stompClient.connected) {
             stompClient.publish({
                 destination: `/game/player-action`,
@@ -263,7 +289,6 @@ export default function GameSessionPage() {
                     'auth-token': token
                 }
             });
-
         } else {
             console.error('❌ STOMP client not connected');
         }
@@ -273,282 +298,408 @@ export default function GameSessionPage() {
         router.push('/main');
     };
 
-    const handleVote = () => {
+    const handleVoting = () => {
         setPhase('voting');
     };
 
+    const styleVideoElement = (video: HTMLMediaElement) => {
+        const videoElement = video as HTMLVideoElement;
+        videoElement.style.width = '100%';
+        videoElement.style.height = '100%';
+        videoElement.style.objectFit = 'cover';
+    };
+
     return (
-        <>
-            {phase === 'lobby' ? (
-                <div className="home-container" style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: '100vh'
-                }}>
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '20px',
-                        justifyContent: 'center'
-                    }}>
-                        <div className="video-container">
-                            <div className="video-wrapper">
-                                <div
-                                    ref={localVideoRef}
-                                    className="video-element"
-                                    style={{
-                                        backgroundColor: '#000',
-                                        minHeight: '150px',
-                                        minWidth: '150px',
-                                        border: '2px solid #49beb7',
-                                        borderRadius: '8px',
-                                        overflow: 'hidden'
-                                    }}
-                                />
-                                {Array(7).fill(null).map((_, index) => (
-                                    <div
-                                        key={index}
-                                        ref={(el: HTMLDivElement | null) => {
-                                            if (remoteVideoRefs.current) {
-                                                remoteVideoRefs.current[index] = el;
-                                            }
-                                        }}
-                                        className="video-element"
-                                        style={{
-                                            backgroundColor: '#000',
-                                            minHeight: '150px',
-                                            minWidth: '150px',
-                                            border: '2px solid #49beb7',
-                                            borderRadius: '8px',
-                                            overflow: 'hidden'
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                        </div>
+      <>
+          {phase === 'lobby' && (
+              <div className="home-container" style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: '100vh'
+              }}>
+                  <div style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '20px',
+                      justifyContent: 'center'
+                  }}>
+                      <div className="video-container">
+                          <div className="video-wrapper">
+                              <div
+                                  ref={localVideoRef}
+                                  className="video-element"
+                                  style={{
+                                      backgroundColor: '#000',
+                                      minHeight: '150px',
+                                      minWidth: '150px',
+                                      border: '2px solid #49beb7',
+                                      borderRadius: '8px',
+                                      overflow: 'hidden'
+                                  }}
+                              />
+                              {Array(7).fill(null).map((_, index) => (
+                                  <div
+                                      key={index}
+                                      ref={(el: HTMLDivElement | null) => {
+                                          if (remoteVideoRefs.current) {
+                                              remoteVideoRefs.current[index] = el;
+                                          }
+                                      }}
+                                      className="video-element"
+                                      style={{
+                                          backgroundColor: '#000',
+                                          minHeight: '150px',
+                                          minWidth: '150px',
+                                          border: '2px solid #49beb7',
+                                          borderRadius: '8px',
+                                          overflow: 'hidden'
+                                      }}
+                                  />
+                              ))}
+                          </div>
+                      </div>
+  
+                      <div className="button-container" style={{
+                          backgroundColor: 'rgba(73, 190, 183, 0.2)',
+                          padding: '20px',
+                          borderRadius: '12px',
+                          border: '2px solid #49beb7',
+                          marginTop: '250px',
+                          marginLeft: '50px',
+                          textAlign: 'center'
+                      }}>
+                          <h1 className="text-white text-2xl font-bold" style={{ borderBottom: '2px solid white', paddingBottom: '5px', marginBottom: '10px' }}>
+                              GAME LOBBY
+                          </h1>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '15px' }}>
+                              <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>Session ID:</span>
+                              <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>{gameToken}</span>
+                          </div>
+                          <div style={{ fontSize: '1.5rem', opacity: 0.9 }}>
+                              ({participants.length + 1}/8 players)
+                          </div>
+                          <div style={{ fontSize: '1.2rem', color: 'white', marginBottom: '10px' }}>
+                              Connected Players: {participants.length + 1}
+                              <ul>
+                                  <li>You (Local)</li>
+                                  {participants.map((p, index) => (
+                                      <li key={index}>{p.identity}</li>
+                                  ))}
+                              </ul>
+                          </div>
+                          <div className="flex gap-4 w-full" style={{ marginTop: '20px' }}>
+                              <button onClick={handleReturn} className="home-button">RETURN</button>
+                              <button onClick={handleStartGame} className="home-button">START GAME</button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          )}
+  
+          {phase === 'role_chameleon' && (
+              <div className="home-container">
+                  {isChameleon ? (
+                      <div className="chameleon-box">
+                          <h1 className="chameleon-title">YOU ARE</h1>
+                          <h1 className="chameleon-subtitle">THE <span className="highlight">CHAMELEON</span>!</h1>
+                      </div>
+                  ) : (
+                      <div className="button-container">
+                          <h1 className="chameleon-title">THE SECRET WORD IS:</h1>
+                          <h1 className="highlight">{secretWord}</h1>
+                      </div>
+                  )}
+              </div>
+          )}
 
-                        <div className="button-container" style={{
-                            backgroundColor: 'rgba(73, 190, 183, 0.2)',
-                            padding: '20px',
-                            borderRadius: '12px',
-                            border: '2px solid #49beb7',
-                            marginTop: '250px',
-                            marginLeft: '50px',
-                            textAlign: 'center'
-                        }}>
-                            <h1 className="text-white text-2xl font-bold" style={{ borderBottom: '2px solid rgb(255, 255, 255)', paddingBottom: '5px', marginBottom: '10px' }}>
-                                GAME LOBBY
-                            </h1>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '15px' }}>
-                                <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>Session ID:</span>
-                                <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>{gameToken}</span>
-                            </div>
-                            <div style={{ fontSize: '1.5rem', opacity: 0.9 }}>
-                                ({participants.length + 1}/8 players)
-                            </div>
-                            <div style={{ fontSize: '1.2rem', color: 'white', marginBottom: '10px' }}>
-                                Connected Players: {participants.length + 1}
-                                <ul>
-                                    <li>You (Local)</li>
-                                    {participants.map((p, index) => (
-                                        <li key={index}>{p.identity}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                            <div className="flex gap-4 w-full" style={{ marginTop: '20px' }}>
-                                <button onClick={handleReturn} className="home-button">RETURN</button>
-                                <button onClick={handleStartGame} className="home-button">START GAME</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ) : phase === 'game' ? (
-                // GAME UI HERE
-                <div className="home-container" style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: '100vh',
-                    padding: '20px'
-                }}>
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '20px',
-                        justifyContent: 'center'
-                    }}>
-                        {/* Left side - Small screens */}
-                        <div className="video-container">
-                            <div className="video-wrapper">
-                                <div
-                                    ref={localVideoRef}
-                                    className="video-element"
-                                    style={{
-                                        backgroundColor: '#000',
-                                        minHeight: '150px',
-                                        minWidth: '150px',
-                                        border: '2px solid #49beb7',
-                                        borderRadius: '8px',
-                                        overflow: 'hidden'
-                                    }}
-                                />
-                                {Array(7).fill(null).map((_, index) => (
-                                    <div
-                                        key={index}
-                                        ref={(el: HTMLDivElement | null) => {
-                                            if (remoteVideoRefs.current) {
-                                                remoteVideoRefs.current[index] = el;
-                                            }
-                                        }}
-                                        className="video-element"
-                                        style={{
-                                            backgroundColor: '#000',
-                                            minHeight: '150px',
-                                            minWidth: '150px',
-                                            border: '2px solid #49beb7',
-                                            borderRadius: '8px',
-                                            overflow: 'hidden'
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                        </div>
+          {phase === 'role_player' && (
+              <div className="home-container">
+                  <div className="button-container">
+                      <h1 className="chameleon-title">THE SECRET WORD IS:</h1>
+                      <h1 className="highlight">{secretWord}</h1>
+                  </div>
+              </div>
+          )}
+  
+          {phase === 'game' && (
+              <div className="home-container" style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: '100vh',
+                  padding: '20px'
+              }}>
+                  <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '20px',
+                      justifyContent: 'center'
+                  }}>
+                      {/* Left side - Small screens */}
+                      <div className="video-container">
+                          <div className="video-wrapper">
+                              <div
+                                  ref={localVideoRef}
+                                  className="video-element"
+                                  style={{
+                                      backgroundColor: '#000',
+                                      minHeight: '150px',
+                                      minWidth: '150px',
+                                      border: '2px solid #49beb7',
+                                      borderRadius: '8px',
+                                      overflow: 'hidden'
+                                  }}
+                              />
+                              {Array(7).fill(null).map((_, index) => (
+                                  <div
+                                      key={index}
+                                      ref={(el: HTMLDivElement | null) => {
+                                          if (remoteVideoRefs.current) {
+                                              remoteVideoRefs.current[index] = el;
+                                          }
+                                      }}
+                                      className="video-element"
+                                      style={{
+                                          backgroundColor: '#000',
+                                          minHeight: '150px',
+                                          minWidth: '150px',
+                                          border: '2px solid #49beb7',
+                                          borderRadius: '8px',
+                                          overflow: 'hidden'
+                                      }}
+                                  />
+                              ))}
+                          </div>
+                      </div>
+  
+                      {/* Center screen and input section */}
+                      <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '20px',
+                          justifyContent: 'center'
+                      }}>
+                          <div style={{
+                              backgroundColor: '#49beb7',
+                              borderRadius: '25px',
+                              padding: '10px 20px',
+                              color: 'white',
+                              fontSize: '18px',
+                              fontWeight: 'bold',
+                              textAlign: 'center',
+                              marginBottom: '10px'
+                          }}>
+                              {isChameleon ? 'YOU ARE THE CHAMELEON!' : `THE SECRET WORD IS: ${secretWord}`}
+                          </div>
+                          <div style={{
+                              display: 'flex',
+                              gap: '10px',
+                              width: '100%'
+                          }}>
+                              <input
+                                  type="text"
+                                  placeholder="Type your guess..."
+                                  value={guessInput}
+                                  onChange={(e) => setGuessInput(e.target.value)}
+                                  style={{
+                                      flex: 1,
+                                      height: '45px',
+                                      padding: '0 20px',
+                                      borderRadius: '25px',
+                                      border: '2px solid #49beb7',
+                                      backgroundColor: 'white',
+                                      color: '#333',
+                                      fontSize: '16px',
+                                      outline: 'none'
+                                  }}
+                              />
+                              <button
+                                  onClick={() => {
+                                      if (guessInput.trim()) {
+                                          const messageContent = guessInput.trim();
+  
+                                          const payload = {
+                                              actionType: "GIVE_HINT",
+                                              gameSessionToken: gameToken,
+                                              actionContent: messageContent,
+                                          };
+  
+                                          if (wsRef.current && wsRef.current.connected) {
+                                              wsRef.current.publish({
+                                                  destination: '/game/player-action',
+                                                  body: JSON.stringify(payload),
+                                                  headers: {
+                                                      'auth-token': token
+                                                  }
+                                              });
+                                          } else {
+                                              console.warn('WebSocket not connected');
+                                          }
+                                      }
+                                  }}
+                                  style={{
+                                      padding: '10px 30px',
+                                      borderRadius: '25px',
+                                      border: 'none',
+                                      backgroundColor: '#49beb7',
+                                      color: 'white',
+                                      fontSize: '20px',
+                                      fontWeight: 'bold',
+                                      cursor: 'pointer',
+                                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                  }}
+                              >
+                                  SEND
+                              </button>
+                          </div>
+                      </div>
+                      <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '20px',
+                          justifyContent: 'center'
+                      }}>
+                          {/* Word List Box */}
+                          <div style={{
+                              backgroundColor: 'rgba(73, 190, 183, 0.2)',
+                              width: '300px',
+                              height: '450px',
+                              border: '2px solid #49beb7',
+                              borderRadius: '8px',
+                              padding: '15px',
+                              justifyContent: 'center'
+                          }}>
+                              <h2 style={{
+                                  color: '#fff',
+                                  fontSize: '24px',
+                                  textAlign: 'center',
+                                  marginBottom: '15px',
+                                  borderBottom: '2px solid #49beb7',
+                                  paddingBottom: '5px'
+                              }}>
+                                  WORD LIST
+                              </h2>
+                              <ul style={{ color: '#49beb7', fontSize: '18px', listStyleType: 'none', padding: 0 }}>
+                                  {messages.map((msg, idx) => (
+                                      <li key={idx} style={{ marginBottom: '10px' }}>{msg}</li>
+                                  ))}
+                              </ul>
+                          </div>
+                          <button
+                              onClick={handleVoting}
+                              className="home-button"
+                          >
+                              START VOTING
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          )}
 
-                        {/* Center screen and input section */}
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '20px',
-                            justifyContent: 'center'
-                        }}>
-                            <div style={{
-                                backgroundColor: '#49beb7',
-                                borderRadius: '25px',
-                                padding: '10px 20px',
-                                color: 'white',
-                                fontSize: '18px',
-                                fontWeight: 'bold',
-                                textAlign: 'center',
-                                marginBottom: '10px'
-                            }}>
-                                {isChameleon ? 'YOU ARE THE CHAMELEON!' : `THE SECRET WORD IS: ${secretWord}`}
-                            </div>
-                            <div
-                                ref={localVideoRef}
-                                style={{
-                                    backgroundColor: '#000',
-                                    width: '600px',
-                                    height: '450px',
-                                    border: '2px solid #49beb7',
-                                    borderRadius: '8px',
-                                    overflow: 'hidden'
-                                }}
-                            />
-                            <div style={{
-                                display: 'flex',
-                                gap: '10px',
-                                width: '100%'
-                            }}>
-                                <input
-                                    type="text"
-                                    placeholder="Type your guess..."
-                                    value={guessInput}
-                                    onChange={(e) => setGuessInput(e.target.value)}
-                                    style={{
-                                        flex: 1,
-                                        height: '45px',
-                                        padding: '0 20px',
-                                        borderRadius: '25px',
-                                        border: '2px solid #49beb7',
-                                        backgroundColor: 'white',
-                                        color: '#333',
-                                        fontSize: '16px',
-                                        outline: 'none'
-                                    }}
-                                />
-                                <button
-                                    onClick={() => {
-                                        if (guessInput.trim()) {
-                                            const messageContent = guessInput.trim();
+          {phase === 'voting' && (
+              <div className="home-container" style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: '100vh',
+                  padding: '20px',
+                  flexDirection: 'column'
+              }}>
+                  {/* Header Text */}
+                  <div style={{
+                      backgroundColor: '#49beb7',
+                      borderRadius: '25px',
+                      padding: '10px 20px',
+                      color: 'white',
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      textAlign: 'center',
+                      marginBottom: '30px'
+                  }}>
+                      <span>VOTE FOR THE CHAMELEON! </span>
+                  </div>
 
-                                            // Construct the PlayerAction-like payload
-                                            const payload = {
-                                                actionType: "GIVE_HINT", // or whatever action this represents
-                                                gameSessionToken: gameToken, // assuming you have this from props or context
-                                                actionContent: messageContent,
-                                            };
+                  {/* Video container grid */}
+                  <div className="video-container">
+                      <div className="video-wrapper" style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(4, 150px)',
+                          gap: '20px',
+                          justifyContent: 'center'
+                      }}>
+                          {/* Local Video */}
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                              <div
+                                  ref={localVideoRef}
+                                  className="video-element"
+                                  style={videoBoxStyle}
+                              />
+                              <button
+                                  disabled={hasVoted || localParticipant?.identity === 'localParticipantId'} // Ensure the local participant can't vote for themselves
+                                  style={{
+                                      marginTop: '8px',
+                                      backgroundColor: hasVoted || localParticipant?.identity === 'localParticipantId' ? '#ccc' : '#49beb7',
+                                      color: 'white',
+                                      border: 'none',
+                                      padding: '5px 10px',
+                                      borderRadius: '5px',
+                                      cursor: hasVoted || localParticipant?.identity === 'localParticipantId' ? 'default' : 'pointer'
+                                  }}
+                                  onClick={() => {
+                                      if (localParticipant?.identity) {
+                                          handleVote(localParticipant.identity);
+                                      }
+                                  }} // Pass the local participant's identity here
+                              >
+                                  VOTE
+                              </button>
+                          </div>
 
-                                            // Update local state (optional if you only want to update on success)
-                                            //setMessages(prev => [...prev, messageContent]);
-                                            //setGuessInput('');
+                          {/* Remote Videos */}
+                          {Array(7).fill(null).map((_, index) => (
+                              <div
+                                  key={index}
+                                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                              >
+                                  <div
+                                      ref={(el: HTMLDivElement | null) => {
+                                          if (remoteVideoRefs.current) {
+                                              remoteVideoRefs.current[index] = el;
+                                          }
+                                      }}
+                                      className="video-element"
+                                      style={{
+                                          backgroundColor: '#000',
+                                          minHeight: '150px',
+                                          minWidth: '150px',
+                                          border: '2px solid #49beb7',
+                                          borderRadius: '8px',
+                                          overflow: 'hidden'
+                                      }}
+                                  />
+                                  <button
+                                      disabled={hasVoted}
+                                      style={{
+                                          marginTop: '8px',
+                                          backgroundColor: hasVoted ? '#ccc' : '#49beb7',
+                                          color: 'white',
+                                          border: 'none',
+                                          padding: '5px 10px',
+                                          borderRadius: '5px',
+                                          cursor: hasVoted ? 'default' : 'pointer'
+                                      }}
+                                      onClick={() => handleVote(`player${index + 1}`)}
+                                  >
+                                      VOTE
+                                  </button>
+                              </div>
+                          ))}
 
-                                            // Send to WebSocket server
-                                            if (wsRef.current && wsRef.current.connected) {
-                                                wsRef.current.publish({
-                                                    destination: '/game/player-action',
-                                                    body: JSON.stringify(payload),
-                                                    headers: {
-                                                        'auth-token': token
-                                                    }
-                                                });
-                                            } else {
-                                                console.warn('WebSocket not connected');
-                                            }
-                                        }
-                                    }}
-                                    style={{
-                                        padding: '10px 30px',
-                                        borderRadius: '25px',
-                                        border: 'none',
-                                        backgroundColor: '#49beb7',
-                                        color: 'white',
-                                        fontSize: '20px',
-                                        fontWeight: 'bold',
-                                        cursor: 'pointer',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                                    }}
-                                >
-                                    SEND
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Word List Box */}
-                        <div style={{
-                            backgroundColor: 'rgba(73, 190, 183, 0.2)',
-                            width: '300px',
-                            height: '450px',
-                            border: '2px solid #49beb7',
-                            borderRadius: '8px',
-                            padding: '15px',
-                            justifyContent: 'center'
-                        }}>
-                            <h2 style={{
-                                color: '#fff',
-                                fontSize: '24px',
-                                textAlign: 'center',
-                                marginBottom: '15px',
-                                borderBottom: '2px solid #49beb7',
-                                paddingBottom: '5px'
-                            }}>
-                                WORD LIST
-                            </h2>
-                            <ul style={{ color: '#49beb7', fontSize: '18px', listStyleType: 'none', padding: 0 }}>
-                                {messages.map((msg, idx) => (
-                                    <li key={idx} style={{ marginBottom: '10px' }}>{msg}</li>
-                                ))}
-                            </ul>
-                            <button
-                                onClick={handleVote}
-                                className="home-button"
-                            >
-                                START VOTING
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                ): null}
-                </>
-                );
+                      </div>
+                  </div>
+              </div>
+          )}
+      </>
+  );
 }

@@ -48,8 +48,8 @@ export default function GameSessionPage() {
     };
 
     const [hasVoted, setHasVoted] = useState(false);
-    /*const [voteResults, setVoteResults] = useState<Record<string, number>>({});*/
     const [vote, setVote] = useState<string | null>(null);
+    /*const [voteResults, setVoteResults] = useState<Record<string, number>>({});*/
 
     const handleVote = (playerId: string) => {
         if (hasVoted) return;

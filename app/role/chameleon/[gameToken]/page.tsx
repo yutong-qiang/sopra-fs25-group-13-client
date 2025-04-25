@@ -1,6 +1,6 @@
 "use client";
 
-import {useParams, useRouter} from 'next/navigation';
+import {useParams, useRouter, useSearchParams} from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
     connect,
@@ -15,6 +15,8 @@ import {
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import '../../../styles/home.css';
+import { Client } from '@stomp/stompjs';
+import SockJS from "sockjs-client";
 /*import {router} from "next/client";*/
 
 
@@ -28,6 +30,10 @@ interface VideoResponse {
 }
 
 export default function GameSessionPage() {
+    const searchParams = useSearchParams();
+    const [guessInput, setGuessInput] = useState('');
+    const secretWord = searchParams.get("word");
+    const isChameleon = searchParams.get("chameleon") === "true";
     const params = useParams();
     const router = useRouter();
     const gameToken = Array.isArray(params?.gameToken)
@@ -46,7 +52,7 @@ export default function GameSessionPage() {
     const centerVideoRef = useRef<HTMLDivElement>(null);
     const apiService = useApi();
     const { value: token } = useLocalStorage<string>("token", "");
-    const [messages, setMessages] = useState<string[]>([]);
+    const [messages] = useState<string[]>([]);
     /*const videoBoxStyle = {
         backgroundColor: '#000',
         minHeight: '150px',
@@ -55,6 +61,7 @@ export default function GameSessionPage() {
         borderRadius: '8px',
         overflow: 'hidden'
     };*/
+    const wsRef = useRef<Client | null>(null);
 
     useEffect(() => {
         const connectToVideoRoom = async () => {
@@ -195,30 +202,49 @@ export default function GameSessionPage() {
         };
     }, [gameToken, token, apiService]);
 
-  useEffect(() => {
-    const socket = new WebSocket('ws://localhost:8080/game-ws');
+    useEffect(() => {
+        if (!token || !gameToken) return;
+        const isLocal = typeof window !== "undefined" && window.location.hostname === "localhost";
 
-    socket.onopen = () => {
-      console.log('WebSocket connection established');
-    };
+        const stompClient = new Client({
+            webSocketFactory: () => new SockJS(
+                isLocal
+                    ? 'http://localhost:8080/game-ws'
+                    : 'https://sopra-fs25-group-13-server.oa.r.appspot.com/game-ws'
+            ),
+            reconnectDelay: 5000,
+            debug: (str) => console.log(str),
+            onConnect: () => {
+                console.log('✅ STOMP connected');
 
-    socket.onmessage = (event) => {
-      const newMessage = event.data;
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-    };
+                stompClient.subscribe(`/game/topic/${gameToken}`, (message) => {
+                    const data = JSON.parse(message.body);
+                    console.log('📨 Message received:', data);
 
-    socket.onclose = () => {
-      console.log('WebSocket connection closed');
-    };
+                    if (data.actionType === 'START_GAME') {
+                        if (data.isChameleon) {
+                            router.push(`/role/chameleon/roleWindow/${gameToken}`);
+                        } else {
+                            router.push(`/role/player/${gameToken}?word=${data.secretWord}&chameleon=${data.isChameleon}`);
+                        }
+                    }
+                });
+            },
+            onStompError: (frame) => {
+                console.error('STOMP error:', frame.headers['message'], frame.body);
+            }
+        });
 
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
+        stompClient.activate();
+        wsRef.current = stompClient;
 
-    return () => {
-      socket.close();
-    };
-  }, []);
+        return () => {
+            if (stompClient) {
+                stompClient.deactivate();
+                wsRef.current = null;
+            }
+        };
+    }, [token, gameToken]);
 
 
     const handleVote = () => {
@@ -391,7 +417,7 @@ export default function GameSessionPage() {
             textAlign: 'center',
             marginBottom: '10px'
           }}>
-            YOU ARE THE CHAMELEON!
+              {isChameleon ? 'YOU ARE THE CHAMELEON!' : `THE SECRET WORD IS: ${secretWord}`}
           </div>
           <div 
             ref={centerVideoRef}
@@ -409,36 +435,64 @@ export default function GameSessionPage() {
             gap: '10px',
             width: '100%'
           }}>
-            <input
-              type="text"
-              placeholder="Type your guess..."
-              style={{
-                flex: 1,
-                height: '45px',
-                padding: '0 20px',
-                borderRadius: '25px',
-                border: '2px solid #49beb7',
-                backgroundColor: 'white',
-                color: '#333',
-                fontSize: '16px',
-                outline: 'none'
-              }}
-            />
-            <button
-              style={{
-                padding: '10px 30px',
-                borderRadius: '25px',
-                border: 'none',
-                backgroundColor: '#49beb7',
-                color: 'white',
-                fontSize: '20px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-              }}
-            >
-              SEND
-            </button>
+              <input
+                  type="text"
+                  placeholder="Type your guess..."
+                  value={guessInput}
+                  onChange={(e) => setGuessInput(e.target.value)}
+                  style={{
+                      flex: 1,
+                      height: '45px',
+                      padding: '0 20px',
+                      borderRadius: '25px',
+                      border: '2px solid #49beb7',
+                      backgroundColor: 'white',
+                      color: '#333',
+                      fontSize: '16px',
+                      outline: 'none'
+                  }}
+              />
+              <button
+                  onClick={() => {
+                      if (guessInput.trim()) {
+                          const messageContent = guessInput.trim();
+
+                          // Construct the PlayerAction-like payload
+                          const payload = {
+                              actionType: "GIVE_HINT", // or whatever action this represents
+                              gameSessionToken: gameToken, // assuming you have this from props or context
+                              actionContent: messageContent,
+                          };
+
+                          // Update local state (optional if you only want to update on success)
+                          //setMessages(prev => [...prev, messageContent]);
+                          //setGuessInput('');
+
+                          // Send to WebSocket server
+                          if (wsRef.current && wsRef.current.connected) {
+                              wsRef.current.publish({
+                                  destination: '/app/game/player-action',
+                                  body: JSON.stringify(payload),
+                              });
+                          } else {
+                              console.warn('WebSocket not connected');
+                          }
+                      }
+                  }}
+                  style={{
+                      padding: '10px 30px',
+                      borderRadius: '25px',
+                      border: 'none',
+                      backgroundColor: '#49beb7',
+                      color: 'white',
+                      fontSize: '20px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+              >
+                  SEND
+              </button>
           </div>
         </div>
 
@@ -463,16 +517,11 @@ export default function GameSessionPage() {
           }}>
             WORD LIST
           </h2>
-          <ul style={{
-            color: '#49beb7',
-            fontSize: '18px',
-            listStyleType: 'none',
-            padding: 0
-          }}>
-            <li style={{ marginBottom: '10px' }}>AIR</li>
-            <li style={{ marginBottom: '10px' }}>SUMMER</li>
-            <li style={{ marginBottom: '10px' }}>INSECT</li>
-          </ul>
+            <ul style={{ color: '#49beb7', fontSize: '18px', listStyleType: 'none', padding: 0 }}>
+                {messages.map((msg, idx) => (
+                    <li key={idx} style={{ marginBottom: '10px' }}>{msg}</li>
+                ))}
+            </ul>
             <button
                 onClick={handleVote}
                 className="home-button"
