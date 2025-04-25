@@ -2,7 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { connect, createLocalTracks, LocalVideoTrack, RemoteVideoTrack, RemoteAudioTrack, Room, Track, RemoteParticipant, LocalTrack } from 'twilio-video';
+import {
+    connect,
+    createLocalTracks,
+    LocalVideoTrack,
+    RemoteVideoTrack,
+    RemoteAudioTrack,
+    Room,
+    Track,
+    RemoteParticipant,
+    LocalTrack,
+    LocalParticipant
+} from 'twilio-video';
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import SockJS from 'sockjs-client';
@@ -38,6 +49,41 @@ export default function GameSessionPage() {
     const [guessInput, setGuessInput] = useState('');
     const [messages, setMessages] = useState<string[]>([]);
 
+    const videoBoxStyle = {
+        backgroundColor: '#000',
+        minHeight: '150px',
+        minWidth: '150px',
+        border: '2px solid #49beb7',
+        borderRadius: '8px',
+        overflow: 'hidden'
+    };
+
+    const [hasVoted, setHasVoted] = useState(false);
+    const [vote, setVote] = useState<string | null>(null);
+    const [localParticipant] = useState<LocalParticipant | null>(null);
+
+
+    const handleVote = (playerId: string) => {
+        if (hasVoted) return;
+        console.log(vote);
+
+        // stops self voting
+        if (localParticipant && playerId === localParticipant.identity) {
+            console.log('You cannot vote for yourself!');
+            return;
+        }
+
+        setHasVoted(true);
+        setVote(playerId);
+        console.log(`Voted for: ${playerId}`);
+
+
+        /*setVoteResults(prev => ({
+            ...prev,
+            [playerId]: (prev[playerId] || 0) + 1
+        }));*/
+    };
+
     useEffect(() => {
         remoteVideoRefs.current = Array(7).fill(null);
     }, []);
@@ -70,12 +116,15 @@ export default function GameSessionPage() {
 
                         setTimeout(() => {
                             setPhase('game');
-                        }, 10000);
+                        }, 5000);
                     }
                     if (data.actionType === 'GIVE_HINT') {
                         if (data.actionContent) {
                             setMessages(prev => [...prev, data.actionContent]);
                         }
+                    }
+                    if (data.actionType === 'START_VOTING') {
+                        setPhase('voting');
                     }
                 });
             },
@@ -169,6 +218,7 @@ useEffect(() => {
 }, [phase, room]);
 
 
+
     const handleParticipantConnected = (participant: RemoteParticipant) => {
         setParticipants(prev => [...prev, participant]);
 
@@ -243,7 +293,7 @@ useEffect(() => {
         router.push('/main');
     };
 
-    const handleVote = () => {
+    const handleVoting = () => {
         setPhase('voting');
     };
 
@@ -428,17 +478,6 @@ useEffect(() => {
                           }}>
                               {isChameleon ? 'YOU ARE THE CHAMELEON!' : `THE SECRET WORD IS: ${secretWord}`}
                           </div>
-                          <div
-                              ref={localVideoRef}
-                              style={{
-                                  backgroundColor: '#000',
-                                  width: '600px',
-                                  height: '450px',
-                                  border: '2px solid #49beb7',
-                                  borderRadius: '8px',
-                                  overflow: 'hidden'
-                              }}
-                          />
                           <div style={{
                               display: 'flex',
                               gap: '10px',
@@ -501,38 +540,148 @@ useEffect(() => {
                               </button>
                           </div>
                       </div>
-  
-                      {/* Word List Box */}
                       <div style={{
-                          backgroundColor: 'rgba(73, 190, 183, 0.2)',
-                          width: '300px',
-                          height: '450px',
-                          border: '2px solid #49beb7',
-                          borderRadius: '8px',
-                          padding: '15px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '20px',
                           justifyContent: 'center'
                       }}>
-                          <h2 style={{
-                              color: '#fff',
-                              fontSize: '24px',
-                              textAlign: 'center',
-                              marginBottom: '15px',
-                              borderBottom: '2px solid #49beb7',
-                              paddingBottom: '5px'
+                          {/* Word List Box */}
+                          <div style={{
+                              backgroundColor: 'rgba(73, 190, 183, 0.2)',
+                              width: '300px',
+                              height: '450px',
+                              border: '2px solid #49beb7',
+                              borderRadius: '8px',
+                              padding: '15px',
+                              justifyContent: 'center'
                           }}>
-                              WORD LIST
-                          </h2>
-                          <ul style={{ color: '#49beb7', fontSize: '18px', listStyleType: 'none', padding: 0 }}>
-                              {messages.map((msg, idx) => (
-                                  <li key={idx} style={{ marginBottom: '10px' }}>{msg}</li>
-                              ))}
-                          </ul>
+                              <h2 style={{
+                                  color: '#fff',
+                                  fontSize: '24px',
+                                  textAlign: 'center',
+                                  marginBottom: '15px',
+                                  borderBottom: '2px solid #49beb7',
+                                  paddingBottom: '5px'
+                              }}>
+                                  WORD LIST
+                              </h2>
+                              <ul style={{ color: '#49beb7', fontSize: '18px', listStyleType: 'none', padding: 0 }}>
+                                  {messages.map((msg, idx) => (
+                                      <li key={idx} style={{ marginBottom: '10px' }}>{msg}</li>
+                                  ))}
+                              </ul>
+                          </div>
                           <button
-                              onClick={handleVote}
+                              onClick={handleVoting}
                               className="home-button"
                           >
                               START VOTING
                           </button>
+                      </div>
+                  </div>
+              </div>
+          )}
+
+          {phase === 'voting' && (
+              <div className="home-container" style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: '100vh',
+                  padding: '20px',
+                  flexDirection: 'column'
+              }}>
+                  {/* Header Text */}
+                  <div style={{
+                      backgroundColor: '#49beb7',
+                      borderRadius: '25px',
+                      padding: '10px 20px',
+                      color: 'white',
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      textAlign: 'center',
+                      marginBottom: '30px'
+                  }}>
+                      <span>VOTE FOR THE CHAMELEON! </span>
+                  </div>
+
+                  {/* Video container grid */}
+                  <div className="video-container">
+                      <div className="video-wrapper" style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(4, 150px)',
+                          gap: '20px',
+                          justifyContent: 'center'
+                      }}>
+                          {/* Local Video */}
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                              <div
+                                  ref={localVideoRef}
+                                  className="video-element"
+                                  style={videoBoxStyle}
+                              />
+                              <button
+                                  disabled={hasVoted || localParticipant?.identity === 'localParticipantId'} // Ensure the local participant can't vote for themselves
+                                  style={{
+                                      marginTop: '8px',
+                                      backgroundColor: hasVoted || localParticipant?.identity === 'localParticipantId' ? '#ccc' : '#49beb7',
+                                      color: 'white',
+                                      border: 'none',
+                                      padding: '5px 10px',
+                                      borderRadius: '5px',
+                                      cursor: hasVoted || localParticipant?.identity === 'localParticipantId' ? 'default' : 'pointer'
+                                  }}
+                                  onClick={() => {
+                                      if (localParticipant?.identity) {
+                                          handleVote(localParticipant.identity);
+                                      }
+                                  }} // Pass the local participant's identity here
+                              >
+                                  VOTE
+                              </button>
+                          </div>
+
+                          {/* Remote Videos */}
+                          {Array(7).fill(null).map((_, index) => (
+                              <div
+                                  key={index}
+                                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                              >
+                                  <div
+                                      ref={(el: HTMLDivElement | null) => {
+                                          if (remoteVideoRefs.current) {
+                                              remoteVideoRefs.current[index] = el;
+                                          }
+                                      }}
+                                      className="video-element"
+                                      style={{
+                                          backgroundColor: '#000',
+                                          minHeight: '150px',
+                                          minWidth: '150px',
+                                          border: '2px solid #49beb7',
+                                          borderRadius: '8px',
+                                          overflow: 'hidden'
+                                      }}
+                                  />
+                                  <button
+                                      disabled={hasVoted}
+                                      style={{
+                                          marginTop: '8px',
+                                          backgroundColor: hasVoted ? '#ccc' : '#49beb7',
+                                          color: 'white',
+                                          border: 'none',
+                                          padding: '5px 10px',
+                                          borderRadius: '5px',
+                                          cursor: hasVoted ? 'default' : 'pointer'
+                                      }}
+                                      onClick={() => handleVote(`player${index + 1}`)}
+                                  >
+                                      VOTE
+                                  </button>
+                              </div>
+                          ))}
+
                       </div>
                   </div>
               </div>
