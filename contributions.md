@@ -78,7 +78,12 @@ reason).
 
 ## Contributions Week 4 - [Begin Date] to [End Date]
 
-_Continue with the same table format as above._
+| **Student** | **Date**   | **Link to Commit** | **Description** | **Relevance** |
+|-------------|------------|--------------------|------------------|---------------|
+| Katie       | 25.04.25   | [Commit](https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/79f7ae0f295c1373c34ca39c3436728a0e3d8c85) | Role pages are on the main game session page now. After start game, players can see role page. | Everything on same `page.tsx` so Twilio stays connected. |
+| Katie       | 24.04.25   | [Commit 1](https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/6e4a2f20c6bb35a361cfab6ddf4ac309cc1cdbe6)<br>[Commit 2](https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/26c8823c1633497091aa6eccd339909f954228c0) | Tried fixing STOMP error for deployed version, but didn't succeed. | STOMP error causes the WebSocket connection to not send requests correctly. |
+
+
 
 ---
 
