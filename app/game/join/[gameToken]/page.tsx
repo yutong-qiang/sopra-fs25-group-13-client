@@ -28,6 +28,15 @@ export default function GameSessionPage() {
     const localVideoRef = useRef<HTMLDivElement>(null);
     const remoteVideoRefs = useRef<Array<HTMLDivElement | null>>([]);
     const wsRef = useRef<Client | null>(null);
+    //const [gameStarted, setGameStarted] = useState(false);
+    const [secretWord, setSecretWord] = useState<string | null>(null);
+    const [isChameleon, setIsChameleon] = useState<boolean>(false);
+
+    type Phase = 'lobby' | 'game' | 'voting';
+    const [phase, setPhase] = useState<Phase>('lobby');
+
+    const [guessInput, setGuessInput] = useState('');
+    const [messages] = useState<string[]>([]);
 
     // Initialize refs array
     useEffect(() => {
@@ -54,9 +63,19 @@ export default function GameSessionPage() {
               const data = JSON.parse(message.body);
               console.log('📨 Message received:', data);
 
-              if (data.actionType === 'START_GAME') {
-                router.push(`/role/chameleon/${gameToken}`);
-              }
+              /*if (data.actionType === 'START_GAME') {
+                  if (data.isChameleon) {
+                      router.push(`/role/chameleon/roleWindow/${gameToken}`);
+                  } else {
+                      router.push(`/role/player/${gameToken}?word=${data.secretWord}&chameleon=${data.isChameleon}`);
+                  }
+              }*/
+                if (data.actionType === 'START_GAME') {
+                    setIsChameleon(data.isChameleon);
+                    setSecretWord(data.secretWord);
+                    //setGameStarted(true);
+                    setPhase('game');
+                }
             });
           },
           onStompError: (frame) => {
@@ -249,100 +268,281 @@ export default function GameSessionPage() {
         router.push('/main');
     };
 
-  return (
-    <div className="home-container" style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh'
-    }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: '20px',
-        justifyContent: 'center'
-      }}>
-        <div className="video-container">
-          <div className="video-wrapper">
-            <div
-              ref={localVideoRef}
-              className="video-element"
-              style={{
-                backgroundColor: '#000',
-                minHeight: '150px',
-                minWidth: '150px',
-                border: '2px solid #49beb7',
-                borderRadius: '8px',
-                overflow: 'hidden'
-              }}
-            />
-            {/* Create 7 remote video containers with unique refs */}
-            {Array(7).fill(null).map((_, index) => (
-                <div
-                    key={index}
-                    ref={(el: HTMLDivElement | null) => {
-                        if (remoteVideoRefs.current) {
-                            remoteVideoRefs.current[index] = el;
-                        }
-                    }}
-                    className="video-element"
-                    style={{
-                        backgroundColor: '#000',
-                        minHeight: '150px',
-                        minWidth: '150px',
-                        border: '2px solid #49beb7',
-                        borderRadius: '8px',
-                        overflow: 'hidden'
-                    }}
-                />
-            ))}
-          </div>
-        </div>
+    const handleVote = () => {
+        setPhase('voting');
+    };
 
-        <div className="button-container" style={{
-          backgroundColor: 'rgba(73, 190, 183, 0.2)',
-          padding: '20px',
-          borderRadius: '12px',
-          border: '2px solid #49beb7',
-          marginTop: '250px',
-          marginLeft: '50px',
-          textAlign: 'center'
-        }}>
-          <h1 className="text-white text-2xl font-bold" style={{ borderBottom: '2px solid rgb(255, 255, 255)', paddingBottom: '5px', marginBottom: '10px' }}>
-            GAME LOBBY
-          </h1>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '15px' }}>
-            <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>Session ID:</span>
-            <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>{gameToken}</span>
-          </div>
-          <div style={{ fontSize: '1.5rem', opacity: 0.9 }}>
-            ({participants.length + 1}/8 players)
-          </div>
-          <div style={{ fontSize: '1.2rem', color: 'white', marginBottom: '10px' }}>
-            Connected Players: {participants.length + 1} {/* +1 for local participant */}
-            <ul>
-                <li>You (Local)</li>
-                {participants.map((p, index) => (
-                    <li key={index}>{p.identity}</li>
-                ))}
-            </ul>
-          </div>
-          <div className="flex gap-4 w-full" style={{ marginTop: '20px' }}>
-                <button
-                 onClick={handleReturn}
-                    className="home-button"
-                >
-                    RETURN
-                </button>
-                <button
-                    onClick={handleStartGame}
-                    className="home-button"
-                >
-                    START GAME
-                </button>
-            </div>
-        </div>
-      </div>
-    </div>
-  );
+    return (
+        <>
+            {phase === 'lobby' ? (
+                <div className="home-container" style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '100vh'
+                }}>
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '20px',
+                        justifyContent: 'center'
+                    }}>
+                        <div className="video-container">
+                            <div className="video-wrapper">
+                                <div
+                                    ref={localVideoRef}
+                                    className="video-element"
+                                    style={{
+                                        backgroundColor: '#000',
+                                        minHeight: '150px',
+                                        minWidth: '150px',
+                                        border: '2px solid #49beb7',
+                                        borderRadius: '8px',
+                                        overflow: 'hidden'
+                                    }}
+                                />
+                                {Array(7).fill(null).map((_, index) => (
+                                    <div
+                                        key={index}
+                                        ref={(el: HTMLDivElement | null) => {
+                                            if (remoteVideoRefs.current) {
+                                                remoteVideoRefs.current[index] = el;
+                                            }
+                                        }}
+                                        className="video-element"
+                                        style={{
+                                            backgroundColor: '#000',
+                                            minHeight: '150px',
+                                            minWidth: '150px',
+                                            border: '2px solid #49beb7',
+                                            borderRadius: '8px',
+                                            overflow: 'hidden'
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="button-container" style={{
+                            backgroundColor: 'rgba(73, 190, 183, 0.2)',
+                            padding: '20px',
+                            borderRadius: '12px',
+                            border: '2px solid #49beb7',
+                            marginTop: '250px',
+                            marginLeft: '50px',
+                            textAlign: 'center'
+                        }}>
+                            <h1 className="text-white text-2xl font-bold" style={{ borderBottom: '2px solid rgb(255, 255, 255)', paddingBottom: '5px', marginBottom: '10px' }}>
+                                GAME LOBBY
+                            </h1>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '15px' }}>
+                                <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>Session ID:</span>
+                                <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>{gameToken}</span>
+                            </div>
+                            <div style={{ fontSize: '1.5rem', opacity: 0.9 }}>
+                                ({participants.length + 1}/8 players)
+                            </div>
+                            <div style={{ fontSize: '1.2rem', color: 'white', marginBottom: '10px' }}>
+                                Connected Players: {participants.length + 1}
+                                <ul>
+                                    <li>You (Local)</li>
+                                    {participants.map((p, index) => (
+                                        <li key={index}>{p.identity}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="flex gap-4 w-full" style={{ marginTop: '20px' }}>
+                                <button onClick={handleReturn} className="home-button">RETURN</button>
+                                <button onClick={handleStartGame} className="home-button">START GAME</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ) : phase === 'game' ? (
+                // GAME UI HERE
+                <div className="home-container" style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '100vh',
+                    padding: '20px'
+                }}>
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '20px',
+                        justifyContent: 'center'
+                    }}>
+                        {/* Left side - Small screens */}
+                        <div className="video-container">
+                            <div className="video-wrapper">
+                                <div
+                                    ref={localVideoRef}
+                                    className="video-element"
+                                    style={{
+                                        backgroundColor: '#000',
+                                        minHeight: '150px',
+                                        minWidth: '150px',
+                                        border: '2px solid #49beb7',
+                                        borderRadius: '8px',
+                                        overflow: 'hidden'
+                                    }}
+                                />
+                                {Array(7).fill(null).map((_, index) => (
+                                    <div
+                                        key={index}
+                                        ref={(el: HTMLDivElement | null) => {
+                                            if (remoteVideoRefs.current) {
+                                                remoteVideoRefs.current[index] = el;
+                                            }
+                                        }}
+                                        className="video-element"
+                                        style={{
+                                            backgroundColor: '#000',
+                                            minHeight: '150px',
+                                            minWidth: '150px',
+                                            border: '2px solid #49beb7',
+                                            borderRadius: '8px',
+                                            overflow: 'hidden'
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Center screen and input section */}
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '20px',
+                            marginRight: '100px',
+                            marginLeft: '-100px'
+                        }}>
+                            <div style={{
+                                backgroundColor: '#49beb7',
+                                borderRadius: '25px',
+                                padding: '10px 20px',
+                                color: 'white',
+                                fontSize: '18px',
+                                fontWeight: 'bold',
+                                textAlign: 'center',
+                                marginBottom: '10px'
+                            }}>
+                                {isChameleon ? 'YOU ARE THE CHAMELEON!' : `THE SECRET WORD IS: ${secretWord}`}
+                            </div>
+                            <div
+                                ref={localVideoRef}
+                                style={{
+                                    backgroundColor: '#000',
+                                    width: '600px',
+                                    height: '450px',
+                                    border: '2px solid #49beb7',
+                                    borderRadius: '8px',
+                                    overflow: 'hidden'
+                                }}
+                            />
+                            <div style={{
+                                display: 'flex',
+                                gap: '10px',
+                                width: '100%'
+                            }}>
+                                <input
+                                    type="text"
+                                    placeholder="Type your guess..."
+                                    value={guessInput}
+                                    onChange={(e) => setGuessInput(e.target.value)}
+                                    style={{
+                                        flex: 1,
+                                        height: '45px',
+                                        padding: '0 20px',
+                                        borderRadius: '25px',
+                                        border: '2px solid #49beb7',
+                                        backgroundColor: 'white',
+                                        color: '#333',
+                                        fontSize: '16px',
+                                        outline: 'none'
+                                    }}
+                                />
+                                <button
+                                    onClick={() => {
+                                        if (guessInput.trim()) {
+                                            const messageContent = guessInput.trim();
+
+                                            // Construct the PlayerAction-like payload
+                                            const payload = {
+                                                actionType: "GIVE_HINT", // or whatever action this represents
+                                                gameSessionToken: gameToken, // assuming you have this from props or context
+                                                actionContent: messageContent,
+                                            };
+
+                                            // Update local state (optional if you only want to update on success)
+                                            //setMessages(prev => [...prev, messageContent]);
+                                            //setGuessInput('');
+
+                                            // Send to WebSocket server
+                                            if (wsRef.current && wsRef.current.connected) {
+                                                wsRef.current.publish({
+                                                    destination: '/app/game/player-action',
+                                                    body: JSON.stringify(payload),
+                                                });
+                                            } else {
+                                                console.warn('WebSocket not connected');
+                                            }
+                                        }
+                                    }}
+                                    style={{
+                                        padding: '10px 30px',
+                                        borderRadius: '25px',
+                                        border: 'none',
+                                        backgroundColor: '#49beb7',
+                                        color: 'white',
+                                        fontSize: '20px',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    }}
+                                >
+                                    SEND
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Word List Box */}
+                        <div style={{
+                            backgroundColor: 'rgba(73, 190, 183, 0.2)',
+                            width: '300px',
+                            height: '450px',
+                            border: '2px solid #49beb7',
+                            borderRadius: '8px',
+                            padding: '15px',
+                            marginRight: '50px',
+                            marginLeft: '-50px'
+                        }}>
+                            <h2 style={{
+                                color: '#fff',
+                                fontSize: '24px',
+                                textAlign: 'center',
+                                marginBottom: '15px',
+                                borderBottom: '2px solid #49beb7',
+                                paddingBottom: '5px'
+                            }}>
+                                WORD LIST
+                            </h2>
+                            <ul style={{ color: '#49beb7', fontSize: '18px', listStyleType: 'none', padding: 0 }}>
+                                {messages.map((msg, idx) => (
+                                    <li key={idx} style={{ marginBottom: '10px' }}>{msg}</li>
+                                ))}
+                            </ul>
+                            <button
+                                onClick={handleVote}
+                                className="home-button"
+                            >
+                                START VOTING
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                ): null}
+                </>
+                );
 }
