@@ -36,7 +36,7 @@ export default function GameSessionPage() {
     const [phase, setPhase] = useState<Phase>('lobby');
 
     const [guessInput, setGuessInput] = useState('');
-    const [messages] = useState<string[]>([]);
+    const [messages, setMessages] = useState<string[]>([]);
 
     useEffect(() => {
         remoteVideoRefs.current = Array(7).fill(null);
@@ -71,6 +71,11 @@ export default function GameSessionPage() {
                         setTimeout(() => {
                             setPhase('game');
                         }, 10000);
+                    }
+                    if (data.actionType === 'GIVE_HINT') {
+                        if (data.actionContent) {
+                            setMessages(prev => [...prev, data.actionContent]);
+                        }
                     }
                 });
             },
@@ -409,8 +414,7 @@ useEffect(() => {
                           display: 'flex',
                           flexDirection: 'column',
                           gap: '20px',
-                          marginRight: '100px',
-                          marginLeft: '-100px'
+                          justifyContent: 'center'
                       }}>
                           <div style={{
                               backgroundColor: '#49beb7',
@@ -470,8 +474,11 @@ useEffect(() => {
   
                                           if (wsRef.current && wsRef.current.connected) {
                                               wsRef.current.publish({
-                                                  destination: '/app/game/player-action',
+                                                  destination: '/game/player-action',
                                                   body: JSON.stringify(payload),
+                                                  headers: {
+                                                      'auth-token': token
+                                                  }
                                               });
                                           } else {
                                               console.warn('WebSocket not connected');
@@ -503,8 +510,7 @@ useEffect(() => {
                           border: '2px solid #49beb7',
                           borderRadius: '8px',
                           padding: '15px',
-                          marginRight: '50px',
-                          marginLeft: '-50px'
+                          justifyContent: 'center'
                       }}>
                           <h2 style={{
                               color: '#fff',
@@ -533,4 +539,4 @@ useEffect(() => {
           )}
       </>
   );
-  
+}
