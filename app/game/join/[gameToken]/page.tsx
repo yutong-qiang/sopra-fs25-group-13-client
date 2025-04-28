@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
     connect,
@@ -42,8 +42,9 @@ export default function GameSessionPage() {
 
     const [secretWord, setSecretWord] = useState<string | null>(null);
     const [isChameleon, setIsChameleon] = useState<boolean>(false);
+    const [currentTurn, setCurrentTurn] = useState<string | null>(null);
 
-    type Phase = 'lobby' | 'role' | 'game' | 'voting';
+    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting';
     const [phase, setPhase] = useState<Phase>('lobby');
 
     const [guessInput, setGuessInput] = useState('');
@@ -88,6 +89,31 @@ export default function GameSessionPage() {
         remoteVideoRefs.current = Array(7).fill(null);
     }, []);
 
+    interface GameInfo {
+        role: string;
+        secretWord: string;
+        currentTurn: string;
+    }
+
+    const handleGameStart = (gameInfo: GameInfo) => {
+        // Update isChameleon and secretWord
+        setIsChameleon(gameInfo.role === "CHAMELEON");
+        setSecretWord(gameInfo.secretWord);
+        setCurrentTurn(gameInfo.currentTurn);
+
+        // Manually update phase based on isChameleon
+        if (gameInfo.role === "CHAMELEON") {
+            setPhase('role_chameleon');
+        } else {
+            setPhase('role_player');
+        }
+
+        // Set a timeout to switch phase to 'game' after 5 seconds
+        setTimeout(() => {
+            setPhase('game');
+        }, 5000);
+    };
+
     // === WebSocket Setup using STOMP over SockJS ===
     useEffect(() => {
         if (!token || !gameToken) return;
@@ -109,14 +135,31 @@ export default function GameSessionPage() {
                     console.log('📨 Message received:', data);
 
                     if (data.actionType === 'START_GAME') {
-                        setIsChameleon(data.isChameleon);
-                        setSecretWord(data.secretWord);
+                        /*setIsChameleon(data.isChameleon);
+                        setSecretWord(data.secretWord);*/
                         localStorage.setItem('gameSessionActive', 'true');
-                        setPhase('role');
 
-                        setTimeout(() => {
-                            setPhase('game');
-                        }, 5000);
+                        // Fetch game info
+                        fetch(`http://localhost:8080/game/info/${gameToken}`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': token  // <-- your token
+                            }
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Failed to fetch game info');
+                                }
+                                return response.json();
+                            })
+                            .then(gameInfo => {
+                                console.log('🎯 Game info fetched:', gameInfo);
+                                handleGameStart(gameInfo);
+                            })
+                            .catch(error => {
+                                console.error('Error fetching game info:', error);
+                            });
+
                     }
                     if (data.actionType === 'GIVE_HINT') {
                         if (data.actionContent) {
@@ -216,6 +259,19 @@ useEffect(() => {
       }
   }
 }, [phase, room]);
+
+    useEffect(() => {
+        if (phase === 'voting' && room) {
+            const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
+
+            if (localTrack && localVideoRef.current) {
+                const el = localTrack.attach();
+                styleVideoElement(el);
+                localVideoRef.current.innerHTML = '';
+                localVideoRef.current.appendChild(el);
+            }
+        }
+    }, [phase, room]);
 
 
 
@@ -392,7 +448,7 @@ useEffect(() => {
               </div>
           )}
   
-          {phase === 'role' && (
+          {phase === 'role_chameleon' && (
               <div className="home-container">
                   {isChameleon ? (
                       <div className="chameleon-box">
@@ -405,6 +461,15 @@ useEffect(() => {
                           <h1 className="highlight">{secretWord}</h1>
                       </div>
                   )}
+              </div>
+          )}
+
+          {phase === 'role_player' && (
+              <div className="home-container">
+                  <div className="button-container">
+                      <h1 className="chameleon-title">THE SECRET WORD IS:</h1>
+                      <h1 className="highlight">{secretWord}</h1>
+                  </div>
               </div>
           )}
   
@@ -476,8 +541,19 @@ useEffect(() => {
                               textAlign: 'center',
                               marginBottom: '10px'
                           }}>
-                              {isChameleon ? 'YOU ARE THE CHAMELEON!' : `THE SECRET WORD IS: ${secretWord}`}
+                              {isChameleon ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}` : `THE SECRET WORD IS: ${secretWord}`}
                           </div>
+                          <div
+                              ref={localVideoRef}
+                              style={{
+                                  backgroundColor: '#000',
+                                  width: '600px',
+                                  height: '450px',
+                                  border: '2px solid #49beb7',
+                                  borderRadius: '8px',
+                                  overflow: 'hidden'
+                              }}
+                          />
                           <div style={{
                               display: 'flex',
                               gap: '10px',
