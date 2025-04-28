@@ -85,8 +85,8 @@ reason).
 |  |  |  |  |  |
 | Yutong  | 21.04 | https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/f5697cbd7cd852206984daa6117be1e3b2170d5b, https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/8a95ea3c030d3feafe2a4d95a3295ca688cd2f49 | video working on remote between different players | to be able to continue with the next webpages |
 | Yutong  | 22.04 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/89bdec9f39fc54d3482b3d923439b692b5b70166 | fixed bug of Audio also working | communication on remote complete |
-|  |  |  |  |  |
-|  |  |  |  |  |
+| Luca | 25.04 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/7eceeae66932e56dc595637df6212df5d41c4ebe | implemented correctly retrieving the roles and the secret word, keeping video connection on voting phase, and giving hints #69, #72, #34, #40, #41, #38 | players now get assigned a role and secret word through websockets, can give hints and keep connections through phases  |
+| Luca | 25.04 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/46fabd95a49d00988e4af6c1bf5e5fb936cca571 | implemented dynamically shifting between phases to change the UI depending on the phase | This removed the need for many pages, making it simpler and ensuring connections are kept |
 ---
 
 ## Contributions Week 5 - [28.04.25] to [04.05.25]
