@@ -62,7 +62,7 @@ reason).
 
 ---
 
-## Contributions Week 3 - [Begin Date] to [End Date]
+## Contributions Week 3 - [07.04.25] to [13.04.25]
 
 | **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
@@ -76,10 +76,9 @@ reason).
 |           Luca         | 13.04.25   | [[Link to Commit 2]](https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/7802fde86b4b26900cd959b5d0d38855ef7e64de) | Implemented the UI and basic functionality for the chameleonCaught page and worked on websocket connection. https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/55, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/59, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/60, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/61, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/62, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/63, https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/120,| The chameleonCaught page will be the page where the chameleon, if caught, can try to still win the game by guessing the word. A functional websocket connection will be needed to provide realtime updates for all players.|
 ---
 
-## Contributions Week 4 - [Begin Date] to [End Date]
+## Contributions Weeks 4-5 - [14.04.25] to [27.04.25]
 
-_Continue with the same table format as above._
-
+|          Lorenzo          |    | | I used the bonus accumulated in the past weeks to avoid working on tasks and concentrate on fixing deployment issues instead.|Deployment issues related to websocket (modifying env to flex and other changes) are necessary to make the application work but have no direct correspondance to any task.|
 ---
 
 ## Contributions Week 5 - [Begin Date] to [End Date]
