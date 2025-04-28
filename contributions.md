@@ -77,16 +77,43 @@ reason).
 ---
 
 ## Contributions Weeks 4-5 - [14.04.25] to [27.04.25]
-
-|          Lorenzo          |    | | I used the bonus accumulated in the past weeks to avoid working on tasks and concentrate on fixing deployment issues instead.|Deployment issues related to websocket (modifying env to flex and other changes) are necessary to make the application work but have no direct correspondance to any task.|
+| **Student** | **Date** | **Link to Commit** | **Description** | **Relevance** |
+| ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
+| Katie | 25.04.25 | [Commit](https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/79f7ae0f295c1373c34ca39c3436728a0e3d8c85) | Role pages are on the main game session page now. After start game, players can see role page. | Everything on same `page.tsx` so Twilio stays connected. |
+| Katie | 24.04.25 | [Commit 1](https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/6e4a2f20c6bb35a361cfab6ddf4ac309cc1cdbe6)<br>[Commit 2](https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/26c8823c1633497091aa6eccd339909f954228c0) | Tried fixing STOMP error for deployed version, but didn't succeed. | STOMP error causes the WebSocket connection to not send requests correctly. |
+| Lorenzo |  |  | I used the bonus accumulated in the past weeks to avoid working on tasks and concentrate on fixing deployment issues instead. | Deployment issues related to WebSocket (modifying env to flex and other changes) are necessary to make the application work but have no direct correspondence to any task. |
+|  |  |  |  |  |
+| Yutong  | 21.04 | https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/f5697cbd7cd852206984daa6117be1e3b2170d5b, https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/8a95ea3c030d3feafe2a4d95a3295ca688cd2f49 | video working on remote between different players | to be able to continue with the next webpages |
+| Yutong  | 22.04 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/89bdec9f39fc54d3482b3d923439b692b5b70166 | fixed bug of Audio also working | communication on remote complete |
+|  |  |  |  |  |
+|  |  |  |  |  |
 ---
 
-## Contributions Week 5 - [Begin Date] to [End Date]
-
+## Contributions Week 5 - [28.04.25] to [04.05.25]
+| **Student** | **Date** | **Link to Commit** | **Description** | **Relevance** |
+| ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
+| Katie |  |  |  |  |
+| Katie |  |  |  |  |
+| Yutong |  |  | |  |
+| Yutong |  |  |  |  |
+| Lorenzo |  |  |  |  |
+| Lorenzo |  |  |  |  |
+| Luca |  |  |  |  |
+| Luca |  |  |  |  |
 _Continue with the same table format as above._
 
 ---
 
-## Contributions Week 6 - [Begin Date] to [End Date]
+## Contributions Week 6 - [05.05.25] to [11.05.25]
+| **Student** | **Date** | **Link to Commit** | **Description** | **Relevance** |
+| ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
+| Katie |  |  |  |  |
+| Katie |  |  |  |  |
+| Yutong |  |  | |  |
+| Yutong |  |  |  |  |
+| Lorenzo |  |  |  |  |
+| Lorenzo |  |  |  |  |
+| Luca |  |  |  |  |
+| Luca |  |  |  |  |
 
 _Continue with the same table format as above._
