@@ -290,6 +290,14 @@ useEffect(() => {
           localVideoRef.current.innerHTML = '';
           localVideoRef.current.appendChild(el);
       }
+      // Attach remote videos
+      room.participants.forEach(participant => {
+          participant.videoTracks.forEach(publication => {
+              if (publication.track) {
+                  attachRemoteVideoTrack(publication.track, participant.sid);
+              }
+          });
+      });
   }
 }, [phase, room]);
 
@@ -303,17 +311,36 @@ useEffect(() => {
                 localVideoRef.current.innerHTML = '';
                 localVideoRef.current.appendChild(el);
             }
+            // Attach remote videos
+            room.participants.forEach(participant => {
+                participant.videoTracks.forEach(publication => {
+                    if (publication.track) {
+                        attachRemoteVideoTrack(publication.track, participant.sid);
+                    }
+                });
+            });
         }
     }, [phase, room]);
+
+    const attachRemoteVideoTrack = (track: RemoteVideoTrack, participantSid: string) => {
+        const container = document.getElementById(`remote-video-${participantSid}`);
+        if (container) {
+            const videoEl = track.attach();
+            styleVideoElement(videoEl);
+            container.innerHTML = '';
+            container.appendChild(videoEl);
+        }
+    };
 
     useEffect(() => {
         if (!room || !currentTurnVideoRef.current) return;
 
         const isLocal = currentTurn === room.localParticipant.identity;
+
         const targetParticipant = isLocal
             ? room.localParticipant
             : Array.from(room.participants.values()).find(
-                p => p.identity === currentTurn
+                (p) => p.identity === currentTurn
             );
 
         if (!targetParticipant) {
@@ -323,19 +350,47 @@ useEffect(() => {
 
         let videoTrack: LocalVideoTrack | RemoteVideoTrack | undefined;
 
-        targetParticipant.videoTracks.forEach(publication => {
+        targetParticipant.videoTracks.forEach((publication) => {
             if (publication.track && publication.track.kind === 'video') {
                 videoTrack = publication.track as LocalVideoTrack | RemoteVideoTrack;
             }
         });
 
-        if (videoTrack && currentTurnVideoRef.current) {
-            const videoElement = videoTrack.attach();
-            styleVideoElement(videoElement);
-            currentTurnVideoRef.current.innerHTML = '';
-            currentTurnVideoRef.current.appendChild(videoElement);
+        const container = currentTurnVideoRef.current;
+        container.innerHTML = ''; // clear previous content
+
+        if (videoTrack) {
+            let videoElement: HTMLVideoElement | null = null;
+
+            if (isLocal) {
+                try {
+                    // Clone the underlying MediaStreamTrack
+                    const clonedTrack = videoTrack.mediaStreamTrack.clone();
+                    const stream = new MediaStream([clonedTrack]);
+
+                    videoElement = document.createElement('video') as HTMLVideoElement;
+                    videoElement.srcObject = stream;
+                    videoElement.autoplay = true;
+                    videoElement.playsInline = true;
+                    videoElement.muted = true;
+                } catch (error) {
+                    console.warn("Failed to clone local track. Falling back to attach().", error);
+
+                    // Fallback to attach (note: this will detach it from sidebar)
+                    videoElement = videoTrack.attach() as HTMLVideoElement;
+                    videoElement.muted = true;
+                }
+            } else {
+                // Remote: use Twilio attach
+                videoElement = videoTrack.attach() as HTMLVideoElement;
+            }
+
+            if (videoElement) {
+                styleVideoElement(videoElement);
+                container.appendChild(videoElement);
+            }
         } else {
-            currentTurnVideoRef.current.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
+            container.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
         }
     }, [currentTurn, room]);
 
