@@ -38,11 +38,13 @@ export default function GameSessionPage() {
     const [participants, setParticipants] = useState<RemoteParticipant[]>([]);
     const localVideoRef = useRef<HTMLDivElement>(null);
     const remoteVideoRefs = useRef<Array<HTMLDivElement | null>>([]);
+    const currentTurnVideoRef = useRef<HTMLDivElement>(null);
     const wsRef = useRef<Client | null>(null);
 
     const [secretWord, setSecretWord] = useState<string | null>(null);
     const [isChameleon, setIsChameleon] = useState<boolean>(false);
     const [currentTurn, setCurrentTurn] = useState<string | null>(null);
+    const [gameState, setGameState] = useState<string | null>(null);
 
     type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting';
     const [phase, setPhase] = useState<Phase>('lobby');
@@ -169,6 +171,33 @@ export default function GameSessionPage() {
                         if (data.actionContent) {
                             setMessages(prev => [...prev, data.actionContent]);
                         }
+
+                        // Re-fetch updated game info to get the new currentTurn
+                        fetch(
+                            `${isLocal
+                                ? 'http://localhost:8080'
+                                : 'https://sopra-fs25-group-13-server.oa.r.appspot.com'}/game/info/${gameToken}`,
+                            {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': token
+                                }
+                            }
+                        )
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Failed to fetch updated game info');
+                                }
+                                return response.json();
+                            })
+                            .then(gameInfo => {
+                                console.log('🔄 Updated game info after hint:', gameInfo);
+                                setCurrentTurn(gameInfo.currentTurn);
+                                setGameState(gameInfo.gameState);
+                            })
+                            .catch(error => {
+                                console.error('Error fetching updated game info after hint:', error);
+                            });
                     }
                     if (data.actionType === 'START_VOTING') {
                         setPhase('voting');
@@ -277,6 +306,39 @@ useEffect(() => {
         }
     }, [phase, room]);
 
+    useEffect(() => {
+        if (!room || !currentTurnVideoRef.current) return;
+
+        const isLocal = currentTurn === room.localParticipant.identity;
+        const targetParticipant = isLocal
+            ? room.localParticipant
+            : Array.from(room.participants.values()).find(
+                p => p.identity === currentTurn
+            );
+
+        if (!targetParticipant) {
+            console.warn("Participant not found for current turn:", currentTurn);
+            return;
+        }
+
+        let videoTrack: LocalVideoTrack | RemoteVideoTrack | undefined;
+
+        targetParticipant.videoTracks.forEach(publication => {
+            if (publication.track && publication.track.kind === 'video') {
+                videoTrack = publication.track as LocalVideoTrack | RemoteVideoTrack;
+            }
+        });
+
+        if (videoTrack && currentTurnVideoRef.current) {
+            const videoElement = videoTrack.attach();
+            styleVideoElement(videoElement);
+            currentTurnVideoRef.current.innerHTML = '';
+            currentTurnVideoRef.current.appendChild(videoElement);
+        } else {
+            currentTurnVideoRef.current.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
+        }
+    }, [currentTurn, room]);
+
 
 
     const handleParticipantConnected = (participant: RemoteParticipant) => {
@@ -354,7 +416,18 @@ useEffect(() => {
     };
 
     const handleVoting = () => {
-        setPhase('voting');
+        const stompClient = wsRef.current;
+        if (stompClient && stompClient.connected) {
+            stompClient.publish({
+                destination: `/game/player-action`,
+                body: JSON.stringify({ actionType: 'START_VOTING', gameSessionToken: gameToken }),
+                headers: {
+                    'auth-token': token
+                }
+            });
+        } else {
+            console.error('❌ STOMP client not connected');
+        }
     };
 
     const styleVideoElement = (video: HTMLMediaElement) => {
@@ -545,10 +618,10 @@ useEffect(() => {
                               textAlign: 'center',
                               marginBottom: '10px'
                           }}>
-                              {isChameleon ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}` : `THE SECRET WORD IS: ${secretWord}`}
+                              {isChameleon ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}` : `THE SECRET WORD IS: ${secretWord}! CURRENT TURN: ${currentTurn}`}
                           </div>
                           <div
-                              ref={localVideoRef}
+                              ref={currentTurnVideoRef}
                               style={{
                                   backgroundColor: '#000',
                                   width: '600px',
@@ -652,12 +725,14 @@ useEffect(() => {
                                   ))}
                               </ul>
                           </div>
-                          <button
-                              onClick={handleVoting}
-                              className="home-button"
-                          >
-                              START VOTING
-                          </button>
+                          {gameState === 'READY_FOR_VOTING' && (
+                              <button
+                                  onClick={handleVoting}
+                                  className="home-button"
+                              >
+                                  START VOTING
+                              </button>
+                          )}
                       </div>
                   </div>
               </div>
