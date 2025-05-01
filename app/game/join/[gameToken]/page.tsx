@@ -140,7 +140,11 @@ export default function GameSessionPage() {
                         localStorage.setItem('gameSessionActive', 'true');
 
                         // Fetch game info
-                        fetch(`http://localhost:8080/game/info/${gameToken}`, {
+                        fetch(
+                            `${isLocal
+                                ? 'http://localhost:8080'
+                                : 'https://sopra-fs25-group-13-server.oa.r.appspot.com'}/game/info/${gameToken}`,
+                            {
                             method: 'GET',
                             headers: {
                                 'Authorization': token  // <-- your token
