@@ -247,7 +247,7 @@ export default function GameSessionPage() {
     }, [gameToken, token]);
 
     // Re-attach local video when switching to the 'game' phase
-useEffect(() => {
+/*useEffect(() => {
   if (phase === 'game' && room) {
       const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
 
@@ -256,6 +256,29 @@ useEffect(() => {
           styleVideoElement(el);
           localVideoRef.current.innerHTML = '';
           localVideoRef.current.appendChild(el);
+      }
+  }
+}, [phase, room]); */
+
+useEffect(() => {
+  if (phase === 'game' && room) {
+      const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
+
+      if (localTrack && localVideoRef.current) {
+          // Clear and attach to the small video slot
+          const smallEl = localTrack.attach();
+          styleVideoElement(smallEl);
+          localVideoRef.current.innerHTML = '';
+          localVideoRef.current.appendChild(smallEl);
+      }
+
+      const bigVideoEl = document.getElementById('big-video');
+      if (localTrack && bigVideoEl) {
+          // Clear and attach to the big video slot
+          const bigEl = localTrack.attach();
+          styleVideoElement(bigEl);
+          bigVideoEl.innerHTML = '';
+          bigVideoEl.appendChild(bigEl);
       }
   }
 }, [phase, room]);
@@ -272,6 +295,7 @@ useEffect(() => {
             }
         }
     }, [phase, room]);
+
 
 
 
@@ -544,15 +568,15 @@ useEffect(() => {
                               {isChameleon ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}` : `THE SECRET WORD IS: ${secretWord}`}
                           </div>
                           <div
-                              ref={localVideoRef}
-                              style={{
-                                  backgroundColor: '#000',
-                                  width: '600px',
-                                  height: '450px',
-                                  border: '2px solid #49beb7',
-                                  borderRadius: '8px',
-                                  overflow: 'hidden'
-                              }}
+                            id="big-video"
+                            style={{
+                                backgroundColor: '#000',
+                                width: '600px',
+                                height: '450px',
+                                border: '2px solid #49beb7',
+                                borderRadius: '8px',
+                                overflow: 'hidden'
+                            }}
                           />
                           <div style={{
                               display: 'flex',
