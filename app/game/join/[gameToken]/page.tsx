@@ -38,13 +38,11 @@ export default function GameSessionPage() {
     const [participants, setParticipants] = useState<RemoteParticipant[]>([]);
     const localVideoRef = useRef<HTMLDivElement>(null);
     const remoteVideoRefs = useRef<Array<HTMLDivElement | null>>([]);
-    const currentTurnVideoRef = useRef<HTMLDivElement>(null);
     const wsRef = useRef<Client | null>(null);
 
     const [secretWord, setSecretWord] = useState<string | null>(null);
     const [isChameleon, setIsChameleon] = useState<boolean>(false);
     const [currentTurn, setCurrentTurn] = useState<string | null>(null);
-    const [gameState, setGameState] = useState<string | null>(null);
 
     type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting';
     const [phase, setPhase] = useState<Phase>('lobby');
@@ -142,11 +140,7 @@ export default function GameSessionPage() {
                         localStorage.setItem('gameSessionActive', 'true');
 
                         // Fetch game info
-                        fetch(
-                            `${isLocal
-                                ? 'http://localhost:8080'
-                                : 'https://sopra-fs25-group-13-server.oa.r.appspot.com'}/game/info/${gameToken}`,
-                            {
+                        fetch(`http://localhost:8080/game/info/${gameToken}`, {
                             method: 'GET',
                             headers: {
                                 'Authorization': token  // <-- your token
@@ -171,33 +165,6 @@ export default function GameSessionPage() {
                         if (data.actionContent) {
                             setMessages(prev => [...prev, data.actionContent]);
                         }
-
-                        // Re-fetch updated game info to get the new currentTurn
-                        fetch(
-                            `${isLocal
-                                ? 'http://localhost:8080'
-                                : 'https://sopra-fs25-group-13-server.oa.r.appspot.com'}/game/info/${gameToken}`,
-                            {
-                                method: 'GET',
-                                headers: {
-                                    'Authorization': token
-                                }
-                            }
-                        )
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Failed to fetch updated game info');
-                                }
-                                return response.json();
-                            })
-                            .then(gameInfo => {
-                                console.log('🔄 Updated game info after hint:', gameInfo);
-                                setCurrentTurn(gameInfo.currentTurn);
-                                setGameState(gameInfo.gameState);
-                            })
-                            .catch(error => {
-                                console.error('Error fetching updated game info after hint:', error);
-                            });
                     }
                     if (data.actionType === 'START_VOTING') {
                         setPhase('voting');
@@ -280,7 +247,7 @@ export default function GameSessionPage() {
     }, [gameToken, token]);
 
     // Re-attach local video when switching to the 'game' phase
-useEffect(() => {
+/*useEffect(() => {
   if (phase === 'game' && room) {
       const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
 
@@ -290,14 +257,29 @@ useEffect(() => {
           localVideoRef.current.innerHTML = '';
           localVideoRef.current.appendChild(el);
       }
-      // Attach remote videos
-      room.participants.forEach(participant => {
-          participant.videoTracks.forEach(publication => {
-              if (publication.track) {
-                  attachRemoteVideoTrack(publication.track, participant.sid);
-              }
-          });
-      });
+  }
+}, [phase, room]); */
+
+useEffect(() => {
+  if (phase === 'game' && room) {
+      const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
+
+      if (localTrack && localVideoRef.current) {
+          // Clear and attach to the small video slot
+          const smallEl = localTrack.attach();
+          styleVideoElement(smallEl);
+          localVideoRef.current.innerHTML = '';
+          localVideoRef.current.appendChild(smallEl);
+      }
+
+      const bigVideoEl = document.getElementById('big-video');
+      if (localTrack && bigVideoEl) {
+          // Clear and attach to the big video slot
+          const bigEl = localTrack.attach();
+          styleVideoElement(bigEl);
+          bigVideoEl.innerHTML = '';
+          bigVideoEl.appendChild(bigEl);
+      }
   }
 }, [phase, room]);
 
@@ -311,88 +293,9 @@ useEffect(() => {
                 localVideoRef.current.innerHTML = '';
                 localVideoRef.current.appendChild(el);
             }
-            // Attach remote videos
-            room.participants.forEach(participant => {
-                participant.videoTracks.forEach(publication => {
-                    if (publication.track) {
-                        attachRemoteVideoTrack(publication.track, participant.sid);
-                    }
-                });
-            });
         }
     }, [phase, room]);
 
-    const attachRemoteVideoTrack = (track: RemoteVideoTrack, participantSid: string) => {
-        const container = document.getElementById(`remote-video-${participantSid}`);
-        if (container) {
-            const videoEl = track.attach();
-            styleVideoElement(videoEl);
-            container.innerHTML = '';
-            container.appendChild(videoEl);
-        }
-    };
-
-    useEffect(() => {
-        if (!room || !currentTurnVideoRef.current) return;
-
-        const isLocal = currentTurn === room.localParticipant.identity;
-
-        const targetParticipant = isLocal
-            ? room.localParticipant
-            : Array.from(room.participants.values()).find(
-                (p) => p.identity === currentTurn
-            );
-
-        if (!targetParticipant) {
-            console.warn("Participant not found for current turn:", currentTurn);
-            return;
-        }
-
-        let videoTrack: LocalVideoTrack | RemoteVideoTrack | undefined;
-
-        targetParticipant.videoTracks.forEach((publication) => {
-            if (publication.track && publication.track.kind === 'video') {
-                videoTrack = publication.track as LocalVideoTrack | RemoteVideoTrack;
-            }
-        });
-
-        const container = currentTurnVideoRef.current;
-        container.innerHTML = ''; // clear previous content
-
-        if (videoTrack) {
-            let videoElement: HTMLVideoElement | null = null;
-
-            if (isLocal) {
-                try {
-                    // Clone the underlying MediaStreamTrack
-                    const clonedTrack = videoTrack.mediaStreamTrack.clone();
-                    const stream = new MediaStream([clonedTrack]);
-
-                    videoElement = document.createElement('video') as HTMLVideoElement;
-                    videoElement.srcObject = stream;
-                    videoElement.autoplay = true;
-                    videoElement.playsInline = true;
-                    videoElement.muted = true;
-                } catch (error) {
-                    console.warn("Failed to clone local track. Falling back to attach().", error);
-
-                    // Fallback to attach (note: this will detach it from sidebar)
-                    videoElement = videoTrack.attach() as HTMLVideoElement;
-                    videoElement.muted = true;
-                }
-            } else {
-                // Remote: use Twilio attach
-                videoElement = videoTrack.attach() as HTMLVideoElement;
-            }
-
-            if (videoElement) {
-                styleVideoElement(videoElement);
-                container.appendChild(videoElement);
-            }
-        } else {
-            container.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
-        }
-    }, [currentTurn, room]);
 
 
 
@@ -471,18 +374,7 @@ useEffect(() => {
     };
 
     const handleVoting = () => {
-        const stompClient = wsRef.current;
-        if (stompClient && stompClient.connected) {
-            stompClient.publish({
-                destination: `/game/player-action`,
-                body: JSON.stringify({ actionType: 'START_VOTING', gameSessionToken: gameToken }),
-                headers: {
-                    'auth-token': token
-                }
-            });
-        } else {
-            console.error('❌ STOMP client not connected');
-        }
+        setPhase('voting');
     };
 
     const styleVideoElement = (video: HTMLMediaElement) => {
@@ -673,18 +565,18 @@ useEffect(() => {
                               textAlign: 'center',
                               marginBottom: '10px'
                           }}>
-                              {isChameleon ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}` : `THE SECRET WORD IS: ${secretWord}! CURRENT TURN: ${currentTurn}`}
+                              {isChameleon ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}` : `THE SECRET WORD IS: ${secretWord}`}
                           </div>
                           <div
-                              ref={currentTurnVideoRef}
-                              style={{
-                                  backgroundColor: '#000',
-                                  width: '600px',
-                                  height: '450px',
-                                  border: '2px solid #49beb7',
-                                  borderRadius: '8px',
-                                  overflow: 'hidden'
-                              }}
+                            id="big-video"
+                            style={{
+                                backgroundColor: '#000',
+                                width: '600px',
+                                height: '450px',
+                                border: '2px solid #49beb7',
+                                borderRadius: '8px',
+                                overflow: 'hidden'
+                            }}
                           />
                           <div style={{
                               display: 'flex',
@@ -780,14 +672,12 @@ useEffect(() => {
                                   ))}
                               </ul>
                           </div>
-                          {gameState === 'READY_FOR_VOTING' && (
-                              <button
-                                  onClick={handleVoting}
-                                  className="home-button"
-                              >
-                                  START VOTING
-                              </button>
-                          )}
+                          <button
+                              onClick={handleVoting}
+                              className="home-button"
+                          >
+                              START VOTING
+                          </button>
                       </div>
                   </div>
               </div>
