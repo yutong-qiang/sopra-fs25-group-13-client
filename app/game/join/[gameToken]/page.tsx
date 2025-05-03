@@ -45,6 +45,7 @@ export default function GameSessionPage() {
     const [isChameleon, setIsChameleon] = useState<boolean>(false);
     const [currentTurn, setCurrentTurn] = useState<string | null>(null);
     const [gameState, setGameState] = useState<string | null>(null);
+    const isLocal = room && currentTurn === room.localParticipant.identity;
 
     type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting';
     const [phase, setPhase] = useState<Phase>('lobby');
@@ -686,7 +687,8 @@ useEffect(() => {
                               {isChameleon ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}` : `THE SECRET WORD IS: ${secretWord}! CURRENT TURN: ${currentTurn}`}
                           </div>
                           <div
-                              id="big-video"
+                              ref={currentTurnVideoRef}
+                              id={isLocal ? 'big-video' : undefined}
                               style={{
                                   backgroundColor: '#000',
                                   width: '600px',
