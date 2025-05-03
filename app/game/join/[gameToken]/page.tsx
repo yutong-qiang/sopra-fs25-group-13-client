@@ -290,6 +290,16 @@ useEffect(() => {
           localVideoRef.current.innerHTML = '';
           localVideoRef.current.appendChild(el);
       }
+
+      const bigVideoEl = document.getElementById('big-video');
+      if (localTrack && bigVideoEl) {
+          // Clear and attach to the big video slot
+          const bigEl = localTrack.attach();
+          styleVideoElement(bigEl);
+          bigVideoEl.innerHTML = '';
+          bigVideoEl.appendChild(bigEl);
+      }
+
       // Attach remote videos
       room.participants.forEach(participant => {
           participant.videoTracks.forEach(publication => {
@@ -676,7 +686,7 @@ useEffect(() => {
                               {isChameleon ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}` : `THE SECRET WORD IS: ${secretWord}! CURRENT TURN: ${currentTurn}`}
                           </div>
                           <div
-                              ref={currentTurnVideoRef}
+                              id="big-video"
                               style={{
                                   backgroundColor: '#000',
                                   width: '600px',
