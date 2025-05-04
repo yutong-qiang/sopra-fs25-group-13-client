@@ -45,7 +45,6 @@ export default function GameSessionPage() {
     const [isChameleon, setIsChameleon] = useState<boolean>(false);
     const [currentTurn, setCurrentTurn] = useState<string | null>(null);
     const [gameState, setGameState] = useState<string | null>(null);
-    const isLocal = room && currentTurn === room.localParticipant.identity;
 
     type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting';
     const [phase, setPhase] = useState<Phase>('lobby');
@@ -344,7 +343,7 @@ useEffect(() => {
     };
 
     useEffect(() => {
-        if (!room || !currentTurnVideoRef.current) return;
+        if (!room || !currentTurnVideoRef.current || phase !== 'game') return; // Only proceed if phase is 'game'
 
         const isLocal = currentTurn === room.localParticipant.identity;
 
@@ -368,7 +367,7 @@ useEffect(() => {
         });
 
         const container = currentTurnVideoRef.current;
-        container.innerHTML = ''; // clear previous content
+        container.innerHTML = ''; // Clear previous content
 
         if (videoTrack) {
             let videoElement: HTMLVideoElement | null = null;
@@ -403,7 +402,7 @@ useEffect(() => {
         } else {
             container.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
         }
-    }, [currentTurn, room]);
+    }, [currentTurn, room, phase]);
 
 
 
@@ -688,7 +687,6 @@ useEffect(() => {
                           </div>
                           <div
                               ref={currentTurnVideoRef}
-                              id={isLocal ? 'big-video' : undefined}
                               style={{
                                   backgroundColor: '#000',
                                   width: '600px',
