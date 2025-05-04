@@ -230,6 +230,15 @@ export default function GameSessionPage() {
                 try {
                     localTracks = await createLocalTracks({ audio: true, video: { width: 640 } });
                     console.log('Created local tracks');
+                    
+                    // Handle local video
+                    const localVideoTrack = localTracks.find(t => t.kind === 'video') as LocalVideoTrack;
+                    if (localVideoTrack && localVideoRef.current) {
+                        const videoElement = localVideoTrack.attach();
+                        styleVideoElement(videoElement);
+                        localVideoRef.current.innerHTML = '';
+                        localVideoRef.current.appendChild(videoElement);
+                    }
                 } catch (err) {
                     console.warn("⚠️ Could not create local tracks:", err);
                 }
@@ -247,24 +256,15 @@ export default function GameSessionPage() {
                 });
 
                 setRoom(room);
+                
+                // Handle existing participants
                 room.participants.forEach(participant => {
                     handleParticipantConnected(participant);
                 });
 
+                // Set up event listeners for new participants
                 room.on('participantConnected', handleParticipantConnected);
                 room.on('participantDisconnected', handleParticipantDisconnected);
-
-                const localTrack = localTracks.find(t => t.kind === 'video') as LocalVideoTrack;
-                if (localVideoRef.current) {
-                    if (localTrack) {
-                        const el = localTrack.attach();
-                        styleVideoElement(el);
-                        localVideoRef.current.innerHTML = '';
-                        localVideoRef.current.appendChild(el);
-                    } else {
-                        localVideoRef.current.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">You</p>`;
-                    }
-                }
             } catch (error) {
                 console.error('Error in setupVideo:', error);
             }
@@ -409,6 +409,7 @@ useEffect(() => {
     const handleParticipantConnected = (participant: RemoteParticipant) => {
         setParticipants(prev => [...prev, participant]);
 
+        // Find the first empty video slot
         const emptyIndex = remoteVideoRefs.current.findIndex(ref => ref && !ref.hasChildNodes());
         if (emptyIndex === -1) return;
         const currentRef = remoteVideoRefs.current[emptyIndex];
