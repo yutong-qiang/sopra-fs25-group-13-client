@@ -502,6 +502,31 @@ useEffect(() => {
         videoElement.style.objectFit = 'cover';
     };
 
+    const handleSendHint = () => {
+        if (guessInput.trim()) {
+            const messageContent = guessInput.trim();
+            setGuessInput(''); // Clear the input field
+
+            const payload = {
+                actionType: "GIVE_HINT",
+                gameSessionToken: gameToken,
+                actionContent: messageContent,
+            };
+
+            if (wsRef.current && wsRef.current.connected) {
+                wsRef.current.publish({
+                    destination: '/game/player-action',
+                    body: JSON.stringify(payload),
+                    headers: {
+                        'auth-token': token
+                    }
+                });
+            } else {
+                console.warn('WebSocket not connected');
+            }
+        }
+    };
+
     return (
       <>
           {phase === 'lobby' && (
@@ -719,29 +744,7 @@ useEffect(() => {
                                   }}
                               />
                               <button
-                                  onClick={() => {
-                                      if (guessInput.trim()) {
-                                          const messageContent = guessInput.trim();
-  
-                                          const payload = {
-                                              actionType: "GIVE_HINT",
-                                              gameSessionToken: gameToken,
-                                              actionContent: messageContent,
-                                          };
-  
-                                          if (wsRef.current && wsRef.current.connected) {
-                                              wsRef.current.publish({
-                                                  destination: '/game/player-action',
-                                                  body: JSON.stringify(payload),
-                                                  headers: {
-                                                      'auth-token': token
-                                                  }
-                                              });
-                                          } else {
-                                              console.warn('WebSocket not connected');
-                                          }
-                                      }
-                                  }}
+                                  onClick={handleSendHint}
                                   style={{
                                       padding: '10px 30px',
                                       borderRadius: '25px',
