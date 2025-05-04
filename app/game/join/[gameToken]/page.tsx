@@ -230,12 +230,6 @@ export default function GameSessionPage() {
                 try {
                     localTracks = await createLocalTracks({ audio: true, video: { width: 640 } });
                     console.log('Created local tracks');
-                    
-                    // Handle local video
-                    const localVideoTrack = localTracks.find(t => t.kind === 'video') as LocalVideoTrack;
-                    if (localVideoTrack) {
-                        handleLocalVideo(localVideoTrack);
-                    }
                 } catch (err) {
                     console.warn("⚠️ Could not create local tracks:", err);
                 }
@@ -259,6 +253,18 @@ export default function GameSessionPage() {
 
                 room.on('participantConnected', handleParticipantConnected);
                 room.on('participantDisconnected', handleParticipantDisconnected);
+
+                const localTrack = localTracks.find(t => t.kind === 'video') as LocalVideoTrack;
+                if (localVideoRef.current) {
+                    if (localTrack) {
+                        const el = localTrack.attach();
+                        styleVideoElement(el);
+                        localVideoRef.current.innerHTML = '';
+                        localVideoRef.current.appendChild(el);
+                    } else {
+                        localVideoRef.current.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">You</p>`;
+                    }
+                }
             } catch (error) {
                 console.error('Error in setupVideo:', error);
             }
@@ -403,7 +409,6 @@ useEffect(() => {
     const handleParticipantConnected = (participant: RemoteParticipant) => {
         setParticipants(prev => [...prev, participant]);
 
-        // Find the first empty video slot
         const emptyIndex = remoteVideoRefs.current.findIndex(ref => ref && !ref.hasChildNodes());
         if (emptyIndex === -1) return;
         const currentRef = remoteVideoRefs.current[emptyIndex];
@@ -495,16 +500,6 @@ useEffect(() => {
         videoElement.style.width = '100%';
         videoElement.style.height = '100%';
         videoElement.style.objectFit = 'cover';
-    };
-
-    // Add this new function to handle local video
-    const handleLocalVideo = (localTrack: LocalVideoTrack) => {
-        if (localVideoRef.current) {
-            const videoElement = localTrack.attach();
-            styleVideoElement(videoElement);
-            localVideoRef.current.innerHTML = '';
-            localVideoRef.current.appendChild(videoElement);
-        }
     };
 
     return (
