@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
     connect,
@@ -45,12 +45,15 @@ export default function GameSessionPage() {
     const [isChameleon, setIsChameleon] = useState<boolean>(false);
     const [currentTurn, setCurrentTurn] = useState<string | null>(null);
     const [gameState, setGameState] = useState<string | null>(null);
+    const [messages, setMessages] = useState<string[]>([]);
+    const [guessInput, setGuessInput] = useState<string>('');
 
     type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting';
     const [phase, setPhase] = useState<Phase>('lobby');
 
-    const [guessInput, setGuessInput] = useState('');
-    const [messages, setMessages] = useState<string[]>([]);
+    const [hasVoted, setHasVoted] = useState(false);
+    const [vote, setVote] = useState<string | null>(null);
+    const [localParticipant] = useState<LocalParticipant | null>(null);
 
     const videoBoxStyle = {
         backgroundColor: '#000',
@@ -61,10 +64,10 @@ export default function GameSessionPage() {
         overflow: 'hidden'
     };
 
-    const [hasVoted, setHasVoted] = useState(false);
-    const [vote, setVote] = useState<string | null>(null);
-    const [localParticipant] = useState<LocalParticipant | null>(null);
-
+    const updateTurn = useCallback((newTurn: string) => {
+        console.log('Updating turn to:', newTurn);
+        setCurrentTurn(newTurn);
+    }, []);
 
     const handleVote = (playerId: string) => {
         if (hasVoted) return;
@@ -137,8 +140,6 @@ export default function GameSessionPage() {
                     console.log('📨 Message received:', data);
 
                     if (data.actionType === 'START_GAME') {
-                        /*setIsChameleon(data.isChameleon);
-                        setSecretWord(data.secretWord);*/
                         localStorage.setItem('gameSessionActive', 'true');
 
                         // Fetch game info
@@ -147,11 +148,12 @@ export default function GameSessionPage() {
                                 ? 'http://localhost:8080'
                                 : 'https://sopra-fs25-group-13-server.oa.r.appspot.com'}/game/info/${gameToken}`,
                             {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': token  // <-- your token
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': token
+                                }
                             }
-                        })
+                        )
                             .then(response => {
                                 if (!response.ok) {
                                     throw new Error('Failed to fetch game info');
@@ -165,14 +167,18 @@ export default function GameSessionPage() {
                             .catch(error => {
                                 console.error('Error fetching game info:', error);
                             });
-
                     }
                     if (data.actionType === 'GIVE_HINT') {
                         if (data.actionContent) {
                             setMessages(prev => [...prev, data.actionContent]);
                         }
+                        
+                        // Update turn immediately from the message
+                        if (data.currentTurn) {
+                            updateTurn(data.currentTurn);
+                        }
 
-                        // Re-fetch updated game info to get the new currentTurn
+                        // Fetch updated game info
                         fetch(
                             `${isLocal
                                 ? 'http://localhost:8080'
@@ -192,7 +198,7 @@ export default function GameSessionPage() {
                             })
                             .then(gameInfo => {
                                 console.log('🔄 Updated game info after hint:', gameInfo);
-                                setCurrentTurn(gameInfo.currentTurn);
+                                updateTurn(gameInfo.currentTurn);
                                 setGameState(gameInfo.gameState);
                             })
                             .catch(error => {
@@ -218,7 +224,7 @@ export default function GameSessionPage() {
                 wsRef.current = null;
             }
         };
-    }, [token, gameToken]);
+    }, [token, gameToken, updateTurn]);
 
     // === Twilio Video Setup ===
     useEffect(() => {
