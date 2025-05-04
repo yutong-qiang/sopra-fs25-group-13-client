@@ -247,13 +247,10 @@ export default function GameSessionPage() {
                 });
 
                 setRoom(room);
-                
-                // Handle existing participants
                 room.participants.forEach(participant => {
                     handleParticipantConnected(participant);
                 });
 
-                // Set up event listeners for new participants
                 room.on('participantConnected', handleParticipantConnected);
                 room.on('participantDisconnected', handleParticipantDisconnected);
 
@@ -407,10 +404,11 @@ useEffect(() => {
         }
     }, [currentTurn, room, phase]);
 
+
+
     const handleParticipantConnected = (participant: RemoteParticipant) => {
         setParticipants(prev => [...prev, participant]);
 
-        // Find the first empty video slot
         const emptyIndex = remoteVideoRefs.current.findIndex(ref => ref && !ref.hasChildNodes());
         if (emptyIndex === -1) return;
         const currentRef = remoteVideoRefs.current[emptyIndex];
@@ -450,37 +448,6 @@ useEffect(() => {
             currentRef.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${participant.identity}</p>`;
         }
     };
-
-    // Add a new useEffect to handle video updates
-    useEffect(() => {
-        if (!room) return;
-
-        // Handle local video
-        const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
-        if (localTrack && localVideoRef.current) {
-            const videoElement = localTrack.attach();
-            styleVideoElement(videoElement);
-            localVideoRef.current.innerHTML = '';
-            localVideoRef.current.appendChild(videoElement);
-        }
-
-        // Handle remote participants' videos
-        room.participants.forEach(participant => {
-            participant.videoTracks.forEach(publication => {
-                if (publication.track) {
-                    const emptyIndex = remoteVideoRefs.current.findIndex(ref => ref && !ref.hasChildNodes());
-                    if (emptyIndex === -1) return;
-                    const currentRef = remoteVideoRefs.current[emptyIndex];
-                    if (!currentRef) return;
-
-                    const videoElement = publication.track.attach();
-                    styleVideoElement(videoElement);
-                    currentRef.innerHTML = '';
-                    currentRef.appendChild(videoElement);
-                }
-            });
-        });
-    }, [room]);
 
     const handleParticipantDisconnected = (participant: RemoteParticipant) => {
         setParticipants(prev => prev.filter(p => p !== participant));
