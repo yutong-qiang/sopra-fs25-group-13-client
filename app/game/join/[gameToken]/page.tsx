@@ -230,15 +230,6 @@ export default function GameSessionPage() {
                 try {
                     localTracks = await createLocalTracks({ audio: true, video: { width: 640 } });
                     console.log('Created local tracks');
-                    
-                    // Handle local video
-                    const localVideoTrack = localTracks.find(t => t.kind === 'video') as LocalVideoTrack;
-                    if (localVideoTrack && localVideoRef.current) {
-                        const videoElement = localVideoTrack.attach();
-                        styleVideoElement(videoElement);
-                        localVideoRef.current.innerHTML = '';
-                        localVideoRef.current.appendChild(videoElement);
-                    }
                 } catch (err) {
                     console.warn("⚠️ Could not create local tracks:", err);
                 }
@@ -265,6 +256,18 @@ export default function GameSessionPage() {
                 // Set up event listeners for new participants
                 room.on('participantConnected', handleParticipantConnected);
                 room.on('participantDisconnected', handleParticipantDisconnected);
+
+                const localTrack = localTracks.find(t => t.kind === 'video') as LocalVideoTrack;
+                if (localVideoRef.current) {
+                    if (localTrack) {
+                        const el = localTrack.attach();
+                        styleVideoElement(el);
+                        localVideoRef.current.innerHTML = '';
+                        localVideoRef.current.appendChild(el);
+                    } else {
+                        localVideoRef.current.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">You</p>`;
+                    }
+                }
             } catch (error) {
                 console.error('Error in setupVideo:', error);
             }
@@ -404,8 +407,6 @@ useEffect(() => {
         }
     }, [currentTurn, room, phase]);
 
-
-
     const handleParticipantConnected = (participant: RemoteParticipant) => {
         setParticipants(prev => [...prev, participant]);
 
@@ -449,6 +450,37 @@ useEffect(() => {
             currentRef.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${participant.identity}</p>`;
         }
     };
+
+    // Add a new useEffect to handle video updates
+    useEffect(() => {
+        if (!room) return;
+
+        // Handle local video
+        const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
+        if (localTrack && localVideoRef.current) {
+            const videoElement = localTrack.attach();
+            styleVideoElement(videoElement);
+            localVideoRef.current.innerHTML = '';
+            localVideoRef.current.appendChild(videoElement);
+        }
+
+        // Handle remote participants' videos
+        room.participants.forEach(participant => {
+            participant.videoTracks.forEach(publication => {
+                if (publication.track) {
+                    const emptyIndex = remoteVideoRefs.current.findIndex(ref => ref && !ref.hasChildNodes());
+                    if (emptyIndex === -1) return;
+                    const currentRef = remoteVideoRefs.current[emptyIndex];
+                    if (!currentRef) return;
+
+                    const videoElement = publication.track.attach();
+                    styleVideoElement(videoElement);
+                    currentRef.innerHTML = '';
+                    currentRef.appendChild(videoElement);
+                }
+            });
+        });
+    }, [room]);
 
     const handleParticipantDisconnected = (participant: RemoteParticipant) => {
         setParticipants(prev => prev.filter(p => p !== participant));
