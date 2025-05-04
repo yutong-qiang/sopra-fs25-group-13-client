@@ -290,6 +290,16 @@ useEffect(() => {
           localVideoRef.current.innerHTML = '';
           localVideoRef.current.appendChild(el);
       }
+
+      const bigVideoEl = document.getElementById('big-video');
+      if (localTrack && bigVideoEl) {
+          // Clear and attach to the big video slot
+          const bigEl = localTrack.attach();
+          styleVideoElement(bigEl);
+          bigVideoEl.innerHTML = '';
+          bigVideoEl.appendChild(bigEl);
+      }
+
       // Attach remote videos
       room.participants.forEach(participant => {
           participant.videoTracks.forEach(publication => {
@@ -333,7 +343,7 @@ useEffect(() => {
     };
 
     useEffect(() => {
-        if (!room || !currentTurnVideoRef.current) return;
+        if (!room || !currentTurnVideoRef.current || phase !== 'game') return; // Only proceed if phase is 'game'
 
         const isLocal = currentTurn === room.localParticipant.identity;
 
@@ -357,7 +367,7 @@ useEffect(() => {
         });
 
         const container = currentTurnVideoRef.current;
-        container.innerHTML = ''; // clear previous content
+        container.innerHTML = ''; // Clear previous content
 
         if (videoTrack) {
             let videoElement: HTMLVideoElement | null = null;
@@ -392,7 +402,7 @@ useEffect(() => {
         } else {
             container.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
         }
-    }, [currentTurn, room]);
+    }, [currentTurn, room, phase]);
 
 
 
