@@ -46,6 +46,7 @@ export default function GameSessionPage() {
     const [isChameleon, setIsChameleon] = useState<boolean>(false);
     const [currentTurn, setCurrentTurn] = useState<string | null>(null);
     const [gameState, setGameState] = useState<string | null>(null);
+    const [votingTimeLeft, setVotingTimeLeft] = useState<number>(30);
 
     type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting';
     const [phase, setPhase] = useState<Phase>('lobby');
@@ -138,8 +139,6 @@ export default function GameSessionPage() {
                     console.log('📨 Message received:', data);
 
                     if (data.actionType === 'START_GAME') {
-                        /*setIsChameleon(data.isChameleon);
-                        setSecretWord(data.secretWord);*/
                         localStorage.setItem('gameSessionActive', 'true');
 
                         // Fetch game info
@@ -150,7 +149,7 @@ export default function GameSessionPage() {
                             {
                             method: 'GET',
                             headers: {
-                                'Authorization': token  // <-- your token
+                                'Authorization': token
                             }
                         })
                             .then(response => {
@@ -166,7 +165,6 @@ export default function GameSessionPage() {
                             .catch(error => {
                                 console.error('Error fetching game info:', error);
                             });
-
                     }
                     if (data.actionType === 'GIVE_HINT') {
                         if (data.actionContent) {
@@ -202,6 +200,7 @@ export default function GameSessionPage() {
                     }
                     if (data.actionType === 'START_VOTING') {
                         setPhase('voting');
+                        setVotingTimeLeft(30); // Reset timer when voting starts
                     }
                 });
             },
@@ -220,6 +219,25 @@ export default function GameSessionPage() {
             }
         };
     }, [token, gameToken]);
+
+    // Timer effect for voting phase
+    useEffect(() => {
+        if (phase !== 'voting' || votingTimeLeft <= 0) return;
+
+        const timer = setInterval(() => {
+            setVotingTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    // When timer reaches 0, navigate to results page
+                    router.push(`/results/chameleonCaught/${gameToken}`);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [phase, votingTimeLeft, gameToken, router]);
 
     // === Twilio Video Setup ===
     useEffect(() => {
@@ -960,6 +978,9 @@ export default function GameSessionPage() {
                       marginBottom: '30px'
                   }}>
                       <span>VOTE FOR THE CHAMELEON! </span>
+                      <span style={{ marginLeft: '10px' }}>
+                          {`00:${String(votingTimeLeft).padStart(2, '0')}`}
+                      </span>
                   </div>
 
                   {/* Video container grid */}
