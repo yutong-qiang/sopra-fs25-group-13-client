@@ -280,7 +280,7 @@ export default function GameSessionPage() {
     }, [gameToken, token]);
 
     // Re-attach local video when switching to the 'game' phase
-useEffect(() => {
+/*useEffect(() => {
   if (phase === 'game' && room) {
       const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
 
@@ -309,7 +309,7 @@ useEffect(() => {
           });
       });
   }
-}, [phase, room]);
+}, [phase, room]);*/
 
     useEffect(() => {
         if (phase === 'voting' && room) {
@@ -342,67 +342,131 @@ useEffect(() => {
         }
     };
 
-    useEffect(() => {
-        if (!room || !currentTurnVideoRef.current || phase !== 'game') return; // Only proceed if phase is 'game'
-
-        const isLocal = currentTurn === room.localParticipant.identity;
-
-        const targetParticipant = isLocal
-            ? room.localParticipant
-            : Array.from(room.participants.values()).find(
-                (p) => p.identity === currentTurn
-            );
-
-        if (!targetParticipant) {
-            console.warn("Participant not found for current turn:", currentTurn);
-            return;
-        }
-
-        let videoTrack: LocalVideoTrack | RemoteVideoTrack | undefined;
-
-        targetParticipant.videoTracks.forEach((publication) => {
-            if (publication.track && publication.track.kind === 'video') {
-                videoTrack = publication.track as LocalVideoTrack | RemoteVideoTrack;
+    function detachAllVideoTracks(participant: RemoteParticipant | LocalParticipant) {
+        participant.videoTracks.forEach(publication => {
+            const track = publication.track;
+            if (track && track.kind === 'video') {
+                track.detach().forEach(el => el.remove());
             }
         });
+    }
 
-        const container = currentTurnVideoRef.current;
-        container.innerHTML = ''; // Clear previous content
+    useEffect(() => {
+        if (!room || phase !== 'game') return;
 
-        if (videoTrack) {
-            let videoElement: HTMLVideoElement | null = null;
+        // Detach existing tracks
+        detachAllVideoTracks(room.localParticipant);
+        room.participants.forEach(detachAllVideoTracks);
 
-            if (isLocal) {
-                try {
-                    // Clone the underlying MediaStreamTrack
-                    const clonedTrack = videoTrack.mediaStreamTrack.clone();
-                    const stream = new MediaStream([clonedTrack]);
+        // ----- Local Video -----
+        const localContainer = localVideoRef.current;
+        if (localContainer) {
+            localContainer.innerHTML = '';
 
-                    videoElement = document.createElement('video') as HTMLVideoElement;
-                    videoElement.srcObject = stream;
-                    videoElement.autoplay = true;
-                    videoElement.playsInline = true;
-                    videoElement.muted = true;
-                } catch (error) {
-                    console.warn("Failed to clone local track. Falling back to attach().", error);
+            let localVideoTrack: LocalVideoTrack | undefined;
 
-                    // Fallback to attach (note: this will detach it from sidebar)
-                    videoElement = videoTrack.attach() as HTMLVideoElement;
-                    videoElement.muted = true;
+            room.localParticipant.videoTracks.forEach(publication => {
+                if (publication.track?.kind === 'video') {
+                    localVideoTrack = publication.track as LocalVideoTrack;
                 }
-            } else {
-                // Remote: use Twilio attach
-                videoElement = videoTrack.attach() as HTMLVideoElement;
-            }
+            });
 
-            if (videoElement) {
+            if (localVideoTrack) {
+                const videoElement = localVideoTrack.attach();
+                videoElement.muted = true;
+                styleVideoElement(videoElement);
+                localContainer.appendChild(videoElement);
+            }
+        }
+
+        // ----- Remote Videos -----
+        const remoteParticipantsArray = Array.from(room.participants.values());
+
+        remoteParticipantsArray.forEach((participant, index) => {
+            const container = remoteVideoRefs.current?.[index];
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            let videoTrack: RemoteVideoTrack | undefined;
+
+            participant.videoTracks.forEach(publication => {
+                if (publication.track?.kind === 'video') {
+                    videoTrack = publication.track as RemoteVideoTrack;
+                }
+            });
+
+            if (videoTrack) {
+                const videoElement = videoTrack.attach();
                 styleVideoElement(videoElement);
                 container.appendChild(videoElement);
             }
-        } else {
-            container.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
+        });
+
+        // ----- Current Turn Camera -----
+        const currentContainer = currentTurnVideoRef.current;
+        if (currentContainer) {
+            currentContainer.innerHTML = '';
+
+            const isLocal = currentTurn === room.localParticipant.identity;
+
+            const targetParticipant = isLocal
+                ? room.localParticipant
+                : remoteParticipantsArray.find(p => p.identity === currentTurn);
+
+            if (!targetParticipant) {
+                console.warn("Participant not found for current turn:", currentTurn);
+                currentContainer.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
+                return;
+            }
+
+            let videoTrack: LocalVideoTrack | RemoteVideoTrack | undefined;
+
+            targetParticipant.videoTracks.forEach(publication => {
+                if (publication.track?.kind === 'video') {
+                    videoTrack = publication.track as LocalVideoTrack | RemoteVideoTrack;
+                }
+            });
+
+            if (videoTrack) {
+                let videoElement: HTMLVideoElement | null = null;
+
+                if (isLocal) {
+                    try {
+                        const clonedTrack = videoTrack.mediaStreamTrack.clone();
+                        const stream = new MediaStream([clonedTrack]);
+                        videoElement = document.createElement('video');
+                        videoElement.srcObject = stream;
+                        videoElement.autoplay = true;
+                        videoElement.playsInline = true;
+                        videoElement.muted = true;
+                    } catch (err) {
+                        console.warn('Failed to clone local track. Falling back to attach()', err);
+                        videoElement = videoTrack.attach() as HTMLVideoElement;
+                        videoElement.muted = true;
+                    }
+                } else {
+                    videoElement = videoTrack.attach() as HTMLVideoElement;
+                }
+
+                if (videoElement) {
+                    styleVideoElement(videoElement);
+                    currentContainer.appendChild(videoElement);
+                }
+            } else {
+                currentContainer.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
+            }
         }
-    }, [currentTurn, room, phase]);
+
+        // Cleanup
+        return () => {
+            detachAllVideoTracks(room.localParticipant);
+            room.participants.forEach(detachAllVideoTracks);
+            if (currentTurnVideoRef.current) {
+                currentTurnVideoRef.current.innerHTML = '';
+            }
+        };
+    }, [room, phase, currentTurn]);
 
 
 
@@ -502,6 +566,10 @@ useEffect(() => {
         videoElement.style.objectFit = 'cover';
     };
 
+    const remoteParticipants = room
+        ? Array.from(room.participants.values())
+        : [];
+
     return (
       <>
           {phase === 'lobby' && (
@@ -531,25 +599,41 @@ useEffect(() => {
                                       overflow: 'hidden'
                                   }}
                               />
-                              {Array(7).fill(null).map((_, index) => (
-                                  <div
-                                      key={index}
-                                      ref={(el: HTMLDivElement | null) => {
-                                          if (remoteVideoRefs.current) {
-                                              remoteVideoRefs.current[index] = el;
-                                          }
-                                      }}
-                                      className="video-element"
-                                      style={{
-                                          backgroundColor: '#000',
-                                          minHeight: '150px',
-                                          minWidth: '150px',
-                                          border: '2px solid #49beb7',
-                                          borderRadius: '8px',
-                                          overflow: 'hidden'
-                                      }}
-                                  />
-                              ))}
+                              {Array(7).fill(null).map((_, index) => {
+                                  const isFilled = index < remoteParticipants.length;
+
+                                  return (
+                                      <div
+                                          key={index}
+                                          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                                      >
+                                          <div
+                                              ref={(el: HTMLDivElement | null) => {
+                                                  if (remoteVideoRefs.current) {
+                                                      remoteVideoRefs.current[index] = el;
+                                                  }
+                                              }}
+                                              className={isFilled ? "video-element" : "chameleon-box"}
+                                              style={{
+                                                  backgroundColor: isFilled ? '#000' : 'green',
+                                                  minHeight: '150px',
+                                                  minWidth: '150px',
+                                                  border: '2px solid #49beb7',
+                                                  borderRadius: '8px',
+                                                  overflow: 'hidden',
+                                                  display: 'flex',
+                                                  justifyContent: 'center',
+                                                  alignItems: 'center',
+                                                  color: 'white',
+                                                  fontWeight: 'bold',
+                                                  fontSize: '16px'
+                                              }}
+                                          >
+                                              {!isFilled && 'Available Slot'}
+                                          </div>
+                                      </div>
+                                  )
+                              })}
                           </div>
                       </div>
   
@@ -644,25 +728,41 @@ useEffect(() => {
                                       overflow: 'hidden'
                                   }}
                               />
-                              {Array(7).fill(null).map((_, index) => (
-                                  <div
-                                      key={index}
-                                      ref={(el: HTMLDivElement | null) => {
-                                          if (remoteVideoRefs.current) {
-                                              remoteVideoRefs.current[index] = el;
-                                          }
-                                      }}
-                                      className="video-element"
-                                      style={{
-                                          backgroundColor: '#000',
-                                          minHeight: '150px',
-                                          minWidth: '150px',
-                                          border: '2px solid #49beb7',
-                                          borderRadius: '8px',
-                                          overflow: 'hidden'
-                                      }}
-                                  />
-                              ))}
+                              {Array(7).fill(null).map((_, index) => {
+                                  const isFilled = index < remoteParticipants.length;
+
+                                  return (
+                                      <div
+                                          key={index}
+                                          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                                      >
+                                          <div
+                                              ref={(el: HTMLDivElement | null) => {
+                                                  if (remoteVideoRefs.current) {
+                                                      remoteVideoRefs.current[index] = el;
+                                                  }
+                                              }}
+                                              className={isFilled ? "video-element" : "chameleon-box"}
+                                              style={{
+                                                  backgroundColor: isFilled ? '#000' : 'green',
+                                                  minHeight: '150px',
+                                                  minWidth: '150px',
+                                                  border: '2px solid #49beb7',
+                                                  borderRadius: '8px',
+                                                  overflow: 'hidden',
+                                                  display: 'flex',
+                                                  justifyContent: 'center',
+                                                  alignItems: 'center',
+                                                  color: 'white',
+                                                  fontWeight: 'bold',
+                                                  fontSize: '16px'
+                                              }}
+                                          >
+                                              {!isFilled && 'Available Slot'}
+                                          </div>
+                                      </div>
+                                  )
+                              })}
                           </div>
                       </div>
   
@@ -687,6 +787,7 @@ useEffect(() => {
                           </div>
                           <div
                               ref={currentTurnVideoRef}
+                              className="video-element"
                               style={{
                                   backgroundColor: '#000',
                                   width: '600px',
@@ -863,44 +964,58 @@ useEffect(() => {
                           </div>
 
                           {/* Remote Videos */}
-                          {Array(7).fill(null).map((_, index) => (
-                              <div
-                                  key={index}
-                                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-                              >
+                          {Array(7).fill(null).map((_, index) => {
+                              const isFilled = index < remoteParticipants.length;
+
+                              return (
                                   <div
-                                      ref={(el: HTMLDivElement | null) => {
-                                          if (remoteVideoRefs.current) {
-                                              remoteVideoRefs.current[index] = el;
-                                          }
-                                      }}
-                                      className="video-element"
-                                      style={{
-                                          backgroundColor: '#000',
-                                          minHeight: '150px',
-                                          minWidth: '150px',
-                                          border: '2px solid #49beb7',
-                                          borderRadius: '8px',
-                                          overflow: 'hidden'
-                                      }}
-                                  />
-                                  <button
-                                      disabled={hasVoted}
-                                      style={{
-                                          marginTop: '8px',
-                                          backgroundColor: hasVoted ? '#ccc' : '#49beb7',
-                                          color: 'white',
-                                          border: 'none',
-                                          padding: '5px 10px',
-                                          borderRadius: '5px',
-                                          cursor: hasVoted ? 'default' : 'pointer'
-                                      }}
-                                      onClick={() => handleVote(`player${index + 1}`)}
+                                      key={index}
+                                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                                   >
-                                      VOTE
-                                  </button>
-                              </div>
-                          ))}
+                                      <div
+                                          ref={(el: HTMLDivElement | null) => {
+                                              if (remoteVideoRefs.current) {
+                                                  remoteVideoRefs.current[index] = el;
+                                              }
+                                          }}
+                                          className={isFilled ? "video-element" : "chameleon-box"}
+                                          style={{
+                                              backgroundColor: isFilled ? '#000' : 'green',
+                                              minHeight: '150px',
+                                              minWidth: '150px',
+                                              border: '2px solid #49beb7',
+                                              borderRadius: '8px',
+                                              overflow: 'hidden',
+                                              display: 'flex',
+                                              justifyContent: 'center',
+                                              alignItems: 'center',
+                                              color: 'white',
+                                              fontWeight: 'bold',
+                                              fontSize: '16px'
+                                          }}
+                                      >
+
+                                      </div>
+                                      {isFilled && (
+                                          <button
+                                              disabled={hasVoted}
+                                              style={{
+                                                  marginTop: '8px',
+                                                  backgroundColor: hasVoted ? '#ccc' : '#49beb7',
+                                                  color: 'white',
+                                                  border: 'none',
+                                                  padding: '5px 10px',
+                                                  borderRadius: '5px',
+                                                  cursor: hasVoted ? 'default' : 'pointer'
+                                              }}
+                                              onClick={() => handleVote(`player${index + 1}`)}
+                                          >
+                                              VOTE
+                                          </button>
+                                      )}
+                                  </div>
+                              );
+                          })}
 
                       </div>
                   </div>
