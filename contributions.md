@@ -96,8 +96,9 @@ reason).
 | Katie |  |  |  |  |
 | Yutong |  |  | |  |
 | Yutong |  |  |  |  |
-| Lorenzo |  |  |  |  |
-| Lorenzo |  |  |  |  |
+| Lorenzo |01.05.2025| https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/595ac072a7d3a238acb726254e19f6ecbaeec75a|Implemented game action: handle chameleon guess #118, #119, #121, #122, #123| This is the final game action and it is relevant since it implements a key point of the game logic: when found, the chameleon should be able to guess the secret word|
+| Lorenzo |01.05.2025| https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/3244a06c818dbee654ceac345f612af92bdedb03|  Added authentication token check for game creation closes #30|Only authenticated users should be able to create a game session|
+| Lorenzo |01.05.2025| https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/c334a9a06b9eb26536fbf7caf91a1415d66fa96e|Handle exception thrown by TwilioService during game creation| Handling of this exceptions allows to better understand what is failing and where when creating a game session|
 | Luca |  |  |  |  |
 | Luca |  |  |  |  |
 _Continue with the same table format as above._
