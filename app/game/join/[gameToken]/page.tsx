@@ -352,7 +352,7 @@ export default function GameSessionPage() {
     }
 
     useEffect(() => {
-        if (!room || (phase !== 'game' && phase !== 'voting')) return;
+        if (!room || (phase !== 'game' && phase !== 'voting' && phase !== 'lobby')) return;
 
         // Detach existing tracks
         detachAllVideoTracks(room.localParticipant);
@@ -631,7 +631,7 @@ export default function GameSessionPage() {
                                                   fontSize: '16px'
                                               }}
                                           >
-                                              {!isFilled && 'Available Slot'}
+                                              <span style={{ visibility: 'hidden' }}>Available Slot</span>
                                           </div>
                                       </div>
                                   )
