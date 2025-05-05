@@ -33,6 +33,7 @@ export default function GameSessionPage() {
     const router = useRouter();
     const apiService = useApi();
     const { value: token } = useLocalStorage<string>("token", "");
+    const [isCopied, setIsCopied] = useState(false);
 
     const [room, setRoom] = useState<Room | null>(null);
     const [participants, setParticipants] = useState<RemoteParticipant[]>([]);
@@ -654,6 +655,38 @@ export default function GameSessionPage() {
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '15px' }}>
                               <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>Session ID:</span>
                               <span style={{ fontSize: '1.5rem', opacity: 0.9 }}>{gameToken}</span>
+                              <button
+                                  onClick={() => {
+                                      navigator.clipboard.writeText(gameToken as string);
+                                      setIsCopied(true);
+                                      setTimeout(() => setIsCopied(false), 2000);
+                                  }}
+                                  style={{
+                                      padding: '5px 15px',
+                                      backgroundColor: isCopied ? '#2e8b57' : '#49beb7',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '5px',
+                                      cursor: 'pointer',
+                                      fontSize: '1rem',
+                                      transition: 'all 0.2s',
+                                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                  }}
+                                  onMouseOver={(e) => {
+                                      if (!isCopied) {
+                                          e.currentTarget.style.backgroundColor = '#3da8a2';
+                                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+                                      }
+                                  }}
+                                  onMouseOut={(e) => {
+                                      if (!isCopied) {
+                                          e.currentTarget.style.backgroundColor = '#49beb7';
+                                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                                      }
+                                  }}
+                              >
+                                  {isCopied ? 'Copied!' : 'Copy'}
+                              </button>
                           </div>
                           <div style={{ fontSize: '1.5rem', opacity: 0.9 }}>
                               ({participants.length + 1}/8 players)

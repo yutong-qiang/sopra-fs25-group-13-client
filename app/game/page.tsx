@@ -10,6 +10,7 @@ import '@/styles/home.css';
 export default function CreateGameSession() {
   const [gameToken, setGameToken] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isCopied, setIsCopied] = useState(false);
   const fetchedRef = useRef(false);
   const initialTokenRef = useRef<string | null>(null);
   const router = useRouter();
@@ -127,7 +128,41 @@ export default function CreateGameSession() {
                 {isLoading ? (
                     <div className="loading-text">Generating Game Token...</div>
                 ) : (
-                    <div className="session-id">{gameToken}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <div className="session-id">{gameToken}</div>
+                        <button
+                            onClick={() => {
+                                navigator.clipboard.writeText(gameToken);
+                                setIsCopied(true);
+                                setTimeout(() => setIsCopied(false), 2000);
+                            }}
+                            style={{
+                                padding: '5px 15px',
+                                backgroundColor: isCopied ? '#2e8b57' : '#49beb7',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '5px',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                            }}
+                            onMouseOver={(e) => {
+                                if (!isCopied) {
+                                    e.currentTarget.style.backgroundColor = '#3da8a2';
+                                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+                                }
+                            }}
+                            onMouseOut={(e) => {
+                                if (!isCopied) {
+                                    e.currentTarget.style.backgroundColor = '#49beb7';
+                                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                                }
+                            }}
+                        >
+                            {isCopied ? 'Copied!' : 'Copy'}
+                        </button>
+                    </div>
                 )}
             </div>
             <div className="flex gap-4 w-full">
