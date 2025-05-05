@@ -353,7 +353,7 @@ export default function GameSessionPage() {
     }
 
     useEffect(() => {
-        if (!room || (phase !== 'game' && phase !== 'voting' && phase !== 'lobby')) return;
+        if (!room || (phase !== 'game' && phase !== 'voting')) return;
 
         // Detach existing tracks
         detachAllVideoTracks(room.localParticipant);
@@ -793,7 +793,7 @@ export default function GameSessionPage() {
                                                   fontSize: '16px'
                                               }}
                                           >
-                                              {!isFilled && 'Available Slot'}
+                                              <span style={{ visibility: 'hidden' }}>Available Slot</span>
                                           </div>
                                       </div>
                                   )
@@ -977,8 +977,9 @@ export default function GameSessionPage() {
                                   className="video-element"
                                   style={videoBoxStyle}
                               />
+                              <span>{localParticipant?.identity}</span> {/* Display the username */}
                               <button
-                                  disabled={hasVoted || localParticipant?.identity === 'localParticipantId'} // Ensure the local participant can't vote for themselves
+                                  disabled={hasVoted || localParticipant?.identity === 'localParticipantId'}
                                   style={{
                                       marginTop: '8px',
                                       backgroundColor: hasVoted || localParticipant?.identity === 'localParticipantId' ? '#ccc' : '#49beb7',
@@ -992,7 +993,7 @@ export default function GameSessionPage() {
                                       if (localParticipant?.identity) {
                                           handleVote(localParticipant.identity);
                                       }
-                                  }} // Pass the local participant's identity here
+                                  }}
                               >
                                   VOTE
                               </button>
@@ -1001,12 +1002,10 @@ export default function GameSessionPage() {
                           {/* Remote Videos */}
                           {Array(7).fill(null).map((_, index) => {
                               const isFilled = index < remoteParticipants.length;
+                              const participant = remoteParticipants[index];
 
                               return (
-                                  <div
-                                      key={index}
-                                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-                                  >
+                                  <div key={index} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                       <div
                                           ref={(el: HTMLDivElement | null) => {
                                               if (remoteVideoRefs.current) {
@@ -1029,29 +1028,30 @@ export default function GameSessionPage() {
                                               fontSize: '16px'
                                           }}
                                       >
-
                                       </div>
                                       {isFilled && (
-                                          <button
-                                              disabled={hasVoted}
-                                              style={{
-                                                  marginTop: '8px',
-                                                  backgroundColor: hasVoted ? '#ccc' : '#49beb7',
-                                                  color: 'white',
-                                                  border: 'none',
-                                                  padding: '5px 10px',
-                                                  borderRadius: '5px',
-                                                  cursor: hasVoted ? 'default' : 'pointer'
-                                              }}
-                                              onClick={() => handleVote(`player${index + 1}`)}
-                                          >
-                                              VOTE
-                                          </button>
+                                          <>
+                                              <span>{participant?.identity}</span> {/* Display the username */}
+                                              <button
+                                                  disabled={hasVoted}
+                                                  style={{
+                                                      marginTop: '8px',
+                                                      backgroundColor: hasVoted ? '#ccc' : '#49beb7',
+                                                      color: 'white',
+                                                      border: 'none',
+                                                      padding: '5px 10px',
+                                                      borderRadius: '5px',
+                                                      cursor: hasVoted ? 'default' : 'pointer'
+                                                  }}
+                                                  onClick={() => handleVote(participant?.identity)} // Use the participant's identity for voting
+                                              >
+                                                  VOTE
+                                              </button>
+                                          </>
                                       )}
                                   </div>
                               );
                           })}
-
                       </div>
                   </div>
               </div>
