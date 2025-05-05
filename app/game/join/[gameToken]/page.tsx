@@ -311,7 +311,7 @@ export default function GameSessionPage() {
   }
 }, [phase, room]);*/
 
-    useEffect(() => {
+    /*useEffect(() => {
         if (phase === 'voting' && room) {
             const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
 
@@ -330,9 +330,9 @@ export default function GameSessionPage() {
                 });
             });
         }
-    }, [phase, room]);
+    }, [phase, room]);*/
 
-    const attachRemoteVideoTrack = (track: RemoteVideoTrack, participantSid: string) => {
+    /*const attachRemoteVideoTrack = (track: RemoteVideoTrack, participantSid: string) => {
         const container = document.getElementById(`remote-video-${participantSid}`);
         if (container) {
             const videoEl = track.attach();
@@ -340,7 +340,7 @@ export default function GameSessionPage() {
             container.innerHTML = '';
             container.appendChild(videoEl);
         }
-    };
+    };*/
 
     function detachAllVideoTracks(participant: RemoteParticipant | LocalParticipant) {
         participant.videoTracks.forEach(publication => {
@@ -352,7 +352,7 @@ export default function GameSessionPage() {
     }
 
     useEffect(() => {
-        if (!room || phase !== 'game') return;
+        if (!room || (phase !== 'game' && phase !== 'voting')) return;
 
         // Detach existing tracks
         detachAllVideoTracks(room.localParticipant);
@@ -403,58 +403,60 @@ export default function GameSessionPage() {
             }
         });
 
-        // ----- Current Turn Camera -----
-        const currentContainer = currentTurnVideoRef.current;
-        if (currentContainer) {
-            currentContainer.innerHTML = '';
+        // ----- Current Turn Camera (only in game phase) -----
+        if (phase === 'game') {
+            const currentContainer = currentTurnVideoRef.current;
+            if (currentContainer) {
+                currentContainer.innerHTML = '';
 
-            const isLocal = currentTurn === room.localParticipant.identity;
+                const isLocal = currentTurn === room.localParticipant.identity;
 
-            const targetParticipant = isLocal
-                ? room.localParticipant
-                : remoteParticipantsArray.find(p => p.identity === currentTurn);
+                const targetParticipant = isLocal
+                    ? room.localParticipant
+                    : remoteParticipantsArray.find(p => p.identity === currentTurn);
 
-            if (!targetParticipant) {
-                console.warn("Participant not found for current turn:", currentTurn);
-                currentContainer.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
-                return;
-            }
-
-            let videoTrack: LocalVideoTrack | RemoteVideoTrack | undefined;
-
-            targetParticipant.videoTracks.forEach(publication => {
-                if (publication.track?.kind === 'video') {
-                    videoTrack = publication.track as LocalVideoTrack | RemoteVideoTrack;
+                if (!targetParticipant) {
+                    console.warn("Participant not found for current turn:", currentTurn);
+                    currentContainer.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
+                    return;
                 }
-            });
 
-            if (videoTrack) {
-                let videoElement: HTMLVideoElement | null = null;
+                let videoTrack: LocalVideoTrack | RemoteVideoTrack | undefined;
 
-                if (isLocal) {
-                    try {
-                        const clonedTrack = videoTrack.mediaStreamTrack.clone();
-                        const stream = new MediaStream([clonedTrack]);
-                        videoElement = document.createElement('video');
-                        videoElement.srcObject = stream;
-                        videoElement.autoplay = true;
-                        videoElement.playsInline = true;
-                        videoElement.muted = true;
-                    } catch (err) {
-                        console.warn('Failed to clone local track. Falling back to attach()', err);
+                targetParticipant.videoTracks.forEach(publication => {
+                    if (publication.track?.kind === 'video') {
+                        videoTrack = publication.track as LocalVideoTrack | RemoteVideoTrack;
+                    }
+                });
+
+                if (videoTrack) {
+                    let videoElement: HTMLVideoElement | null = null;
+
+                    if (isLocal) {
+                        try {
+                            const clonedTrack = videoTrack.mediaStreamTrack.clone();
+                            const stream = new MediaStream([clonedTrack]);
+                            videoElement = document.createElement('video');
+                            videoElement.srcObject = stream;
+                            videoElement.autoplay = true;
+                            videoElement.playsInline = true;
+                            videoElement.muted = true;
+                        } catch (err) {
+                            console.warn('Failed to clone local track. Falling back to attach()', err);
+                            videoElement = videoTrack.attach() as HTMLVideoElement;
+                            videoElement.muted = true;
+                        }
+                    } else {
                         videoElement = videoTrack.attach() as HTMLVideoElement;
-                        videoElement.muted = true;
+                    }
+
+                    if (videoElement) {
+                        styleVideoElement(videoElement);
+                        currentContainer.appendChild(videoElement);
                     }
                 } else {
-                    videoElement = videoTrack.attach() as HTMLVideoElement;
+                    currentContainer.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
                 }
-
-                if (videoElement) {
-                    styleVideoElement(videoElement);
-                    currentContainer.appendChild(videoElement);
-                }
-            } else {
-                currentContainer.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${currentTurn}</p>`;
             }
         }
 
@@ -462,7 +464,7 @@ export default function GameSessionPage() {
         return () => {
             detachAllVideoTracks(room.localParticipant);
             room.participants.forEach(detachAllVideoTracks);
-            if (currentTurnVideoRef.current) {
+            if (phase === 'game' && currentTurnVideoRef.current) {
                 currentTurnVideoRef.current.innerHTML = '';
             }
         };
