@@ -12,7 +12,8 @@ import {
     Track,
     RemoteParticipant,
     LocalTrack,
-    LocalParticipant
+    LocalParticipant, 
+    LocalAudioTrack
 } from 'twilio-video';
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
@@ -67,6 +68,11 @@ export default function GameSessionPage() {
     /*const [vote, setVote] = useState<string | null>(null);*/
     const [localParticipant] = useState<LocalParticipant | null>(null);
 
+    const [isMicOn, setIsMicOn] = useState(true);
+    const [isCameraOn, setIsCameraOn] = useState(true);
+
+    const [localAudioTrack, setLocalAudioTrack] = useState<LocalAudioTrack | null>(null);
+    const [localVideoTrack, setLocalVideoTrack] = useState<LocalVideoTrack | null>(null);
 
     const handleVote = (playerId: string) => {
         if (hasVoted) return;
@@ -297,6 +303,9 @@ export default function GameSessionPage() {
                 room.on('participantDisconnected', handleParticipantDisconnected);
 
                 const localTrack = localTracks.find(t => t.kind === 'video') as LocalVideoTrack;
+                const audioTrack = localTracks.find(t => t.kind === 'audio') as LocalAudioTrack;
+                setLocalVideoTrack(localTrack);
+                setLocalAudioTrack(audioTrack);
                 if (localVideoRef.current) {
                     if (localTrack) {
                         const el = localTrack.attach();
@@ -613,6 +622,28 @@ export default function GameSessionPage() {
     const remoteParticipants = room
         ? Array.from(room.participants.values())
         : [];
+
+    function handleMuteUnmute() {
+        if (localAudioTrack) {
+            if (isMicOn) {
+                localAudioTrack.disable();
+            } else {
+                localAudioTrack.enable();
+            }
+            setIsMicOn(!isMicOn);
+        }
+    }
+
+    function handleCameraOnOff() {
+        if (localVideoTrack) {
+            if (isCameraOn) {
+                localVideoTrack.disable();
+            } else {
+                localVideoTrack.enable();
+            }
+            setIsCameraOn(!isCameraOn);
+        }
+    }
 
     return (
       <>
@@ -1100,6 +1131,68 @@ export default function GameSessionPage() {
                   </div>
               </div>
           )}
+
+          <div
+              style={{
+                  position: 'fixed',
+                  right: '32px',
+                  bottom: '32px',
+                  zIndex: 1000,
+                  display: 'flex',
+                  gap: '24px',
+                  background: 'rgba(44, 62, 80, 0.13)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 24px rgba(44, 62, 80, 0.10)',
+                  padding: '8px 28px',
+                  alignItems: 'center',
+                  backdropFilter: 'blur(8px)',
+              }}
+          >
+              <button
+                  onClick={handleMuteUnmute}
+                  style={{
+                      background: 'none',
+                      border: 'none',
+                      borderRadius: '12px',
+                      width: '44px',
+                      height: '44px',
+                      cursor: 'pointer',
+                      fontSize: '2rem',
+                      color: isMicOn ? '#fff' : '#e74c3c',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      outline: 'none',
+                      padding: 0,
+                      transition: 'color 0.2s',
+                  }}
+                  title={isMicOn ? "Mute Microphone" : "Unmute Microphone"}
+              >
+                  {isMicOn ? '🎤' : '🔇'}
+              </button>
+              <button
+                  onClick={handleCameraOnOff}
+                  style={{
+                      background: 'none',
+                      border: 'none',
+                      borderRadius: '12px',
+                      width: '44px',
+                      height: '44px',
+                      cursor: 'pointer',
+                      fontSize: '2rem',
+                      color: isCameraOn ? '#fff' : '#e74c3c',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      outline: 'none',
+                      padding: 0,
+                      transition: 'color 0.2s',
+                  }}
+                  title={isCameraOn ? "Turn Camera Off" : "Turn Camera On"}
+              >
+                  {isCameraOn ? '📷' : '🚫'}
+              </button>
+          </div>
       </>
   );
 }
