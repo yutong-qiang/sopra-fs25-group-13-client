@@ -92,8 +92,9 @@ reason).
 ## Contributions Week 5 - [28.04.25] to [04.05.25]
 | **Student** | **Date** | **Link to Commit** | **Description** | **Relevance** |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| Katie |  |  |  |  |
-| Katie |  |  |  |  |
+| Katie |02.05-04.05.2025  |https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/bdf7fc343ce88571b8553f8fcd2fa442176f968e https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/2831658a7c6cc7aec4ed29481e505eb72a7d8fba  | Tried to make the 8 small videos work and show the players throughout the game. But couldn't fix.  | So it looks like our UI design we submitted at the beginning. |
+| Katie | 05.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/40584ec041bdcbd50ac62270c41dc4b5672f557e | Added copy button for game token. | Nice feature to have. |
+| Katie | 05.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/2e3180c36c124db018bac5b7a44bf072b9496721 |Added timer display for voting phase.  | Will redirect to result page after voting. |
 | Yutong |  |  | |  |
 | Yutong |  |  |  |  |
 | Lorenzo |01.05.2025| https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/595ac072a7d3a238acb726254e19f6ecbaeec75a|Implemented game action: handle chameleon guess #118, #119, #121, #122, #123| This is the final game action and it is relevant since it implements a key point of the game logic: when found, the chameleon should be able to guess the secret word|
