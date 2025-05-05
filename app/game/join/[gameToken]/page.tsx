@@ -64,29 +64,41 @@ export default function GameSessionPage() {
     };
 
     const [hasVoted, setHasVoted] = useState(false);
-    const [vote, setVote] = useState<string | null>(null);
+    /*const [vote, setVote] = useState<string | null>(null);*/
     const [localParticipant] = useState<LocalParticipant | null>(null);
 
 
     const handleVote = (playerId: string) => {
         if (hasVoted) return;
-        console.log(vote);
 
-        // stops self voting
+        // prevent self-voting
         if (localParticipant && playerId === localParticipant.identity) {
             console.log('You cannot vote for yourself!');
             return;
         }
 
         setHasVoted(true);
-        setVote(playerId);
+        /*setVote(playerId);*/
         console.log(`Voted for: ${playerId}`);
 
+        // Send vote through WebSocket
+        const payload = {
+            actionType: "VOTE",
+            gameSessionToken: gameToken,
+            actionContent: playerId, // this must be the accused player's identity (username)
+        };
 
-        /*setVoteResults(prev => ({
-            ...prev,
-            [playerId]: (prev[playerId] || 0) + 1
-        }));*/
+        if (wsRef.current && wsRef.current.connected) {
+            wsRef.current.publish({
+                destination: '/game/player-action',
+                body: JSON.stringify(payload),
+                headers: {
+                    'auth-token': token,
+                }
+            });
+        } else {
+            console.warn('WebSocket not connected');
+        }
     };
 
     useEffect(() => {
@@ -201,6 +213,17 @@ export default function GameSessionPage() {
                     if (data.actionType === 'START_VOTING') {
                         setPhase('voting');
                         setVotingTimeLeft(30); // Reset timer when voting starts
+                    }
+
+                    if (data.actionType === "VOTE") {
+                        if (data.actionResult === "CHAMELEON_FOUND") {
+                            // e.g. show a success message
+                            console.log("Chameleon was found! 🎯");
+                        } else if (data.actionResult === "CHAMELEON_WON") {
+                            // e.g. show a failure message
+                            console.log("Chameleon escaped! 🕵️‍♂️");
+                        }
+                        // Optionally, transition UI to next phase (e.g. guessing screen or end screen)
                     }
                 });
             },
@@ -998,7 +1021,7 @@ export default function GameSessionPage() {
                                   className="video-element"
                                   style={videoBoxStyle}
                               />
-                              <span>{localParticipant?.identity}</span> {/* Display the username */}
+                              <span style={{ color: 'white' }}>{localParticipant?.identity}</span> {/* Display the username */}
                               <button
                                   disabled={hasVoted || localParticipant?.identity === 'localParticipantId'}
                                   style={{
@@ -1052,7 +1075,7 @@ export default function GameSessionPage() {
                                       </div>
                                       {isFilled && (
                                           <>
-                                              <span>{participant?.identity}</span> {/* Display the username */}
+                                              <span style={{ color: 'white' }}>{participant?.identity}</span> {/* Display the username */}
                                               <button
                                                   disabled={hasVoted}
                                                   style={{
