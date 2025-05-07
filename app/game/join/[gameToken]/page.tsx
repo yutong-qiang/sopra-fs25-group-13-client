@@ -225,9 +225,11 @@ export default function GameSessionPage() {
                         if (data.actionResult === "CHAMELEON_FOUND") {
                             // e.g. show a success message
                             console.log("Chameleon was found! 🎯");
+                            setPhase('chameleon_loose');
                         } else if (data.actionResult === "CHAMELEON_WON") {
                             // e.g. show a failure message
                             console.log("Chameleon escaped! 🕵️‍♂️");
+                            setPhase('chameleon_win');
                         }
                         // Optionally, transition UI to next phase (e.g. guessing screen or end screen)
                     }
