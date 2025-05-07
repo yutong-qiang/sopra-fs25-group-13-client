@@ -12,7 +12,8 @@ import {
     Track,
     RemoteParticipant,
     LocalTrack,
-    LocalParticipant
+    LocalParticipant, 
+    LocalAudioTrack
 } from 'twilio-video';
 import { useApi } from '@/hooks/useApi';
 import useLocalStorage from '@/hooks/useLocalStorage';
@@ -48,7 +49,7 @@ export default function GameSessionPage() {
     const [gameState, setGameState] = useState<string | null>(null);
     const [votingTimeLeft, setVotingTimeLeft] = useState<number>(30);
 
-    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting' | 'chameleon_win' | 'chameleon_loose';
+    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting';
     const [phase, setPhase] = useState<Phase>('lobby');
 
     const [guessInput, setGuessInput] = useState('');
@@ -67,6 +68,11 @@ export default function GameSessionPage() {
     /*const [vote, setVote] = useState<string | null>(null);*/
     const [localParticipant] = useState<LocalParticipant | null>(null);
 
+    const [isMicOn, setIsMicOn] = useState(true);
+    const [isCameraOn, setIsCameraOn] = useState(true);
+
+    const [localAudioTrack, setLocalAudioTrack] = useState<LocalAudioTrack | null>(null);
+    const [localVideoTrack, setLocalVideoTrack] = useState<LocalVideoTrack | null>(null);
 
     const handleVote = (playerId: string) => {
         if (hasVoted) return;
@@ -215,11 +221,10 @@ export default function GameSessionPage() {
                         setVotingTimeLeft(30); // Reset timer when voting starts
                     }
 
-                    if (data.actionType === "END_VOTING") {
+                    if (data.actionType === "VOTE") {
                         if (data.actionResult === "CHAMELEON_FOUND") {
                             // e.g. show a success message
                             console.log("Chameleon was found! 🎯");
-
                         } else if (data.actionResult === "CHAMELEON_WON") {
                             // e.g. show a failure message
                             console.log("Chameleon escaped! 🕵️‍♂️");
@@ -253,7 +258,7 @@ export default function GameSessionPage() {
                 if (prev <= 1) {
                     clearInterval(timer);
                     // When timer reaches 0, navigate to results page
-                    /*router.push(`/results/chameleonCaught/${gameToken}`);*/
+                    router.push(`/results/chameleonCaught/${gameToken}`);
                     return 0;
                 }
                 return prev - 1;
@@ -298,6 +303,9 @@ export default function GameSessionPage() {
                 room.on('participantDisconnected', handleParticipantDisconnected);
 
                 const localTrack = localTracks.find(t => t.kind === 'video') as LocalVideoTrack;
+                const audioTrack = localTracks.find(t => t.kind === 'audio') as LocalAudioTrack;
+                setLocalVideoTrack(localTrack);
+                setLocalAudioTrack(audioTrack);
                 if (localVideoRef.current) {
                     if (localTrack) {
                         const el = localTrack.attach();
@@ -615,6 +623,28 @@ export default function GameSessionPage() {
         ? Array.from(room.participants.values())
         : [];
 
+    function handleMuteUnmute() {
+        if (localAudioTrack) {
+            if (isMicOn) {
+                localAudioTrack.disable();
+            } else {
+                localAudioTrack.enable();
+            }
+            setIsMicOn(!isMicOn);
+        }
+    }
+
+    function handleCameraOnOff() {
+        if (localVideoTrack) {
+            if (isCameraOn) {
+                localVideoTrack.disable();
+            } else {
+                localVideoTrack.enable();
+            }
+            setIsCameraOn(!isCameraOn);
+        }
+    }
+
     return (
       <>
           {phase === 'lobby' && (
@@ -860,45 +890,20 @@ export default function GameSessionPage() {
                               textAlign: 'center',
                               marginBottom: '10px'
                           }}>
-                              {!currentTurn
-                                  ? 'ALL TURNS ARE OVER'
-                                  : isChameleon
-                                      ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}`
-                                      : `THE SECRET WORD IS: ${secretWord}! CURRENT TURN: ${currentTurn}`}
+                              {isChameleon ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}` : `THE SECRET WORD IS: ${secretWord}! CURRENT TURN: ${currentTurn}`}
                           </div>
-
-                          {!currentTurn ? (
-                              <div style={{
+                          <div
+                              ref={currentTurnVideoRef}
+                              className="video-element"
+                              style={{
                                   backgroundColor: '#000',
                                   width: '600px',
                                   height: '450px',
                                   border: '2px solid #49beb7',
                                   borderRadius: '8px',
-                                  display: 'flex',
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                  color: 'white',
-                                  fontSize: '24px',
-                                  fontWeight: 'bold',
-                                  textAlign: 'center',
-                                  padding: '20px'
-                              }}>
-                                  YOU CAN START THE VOTING NOW
-                              </div>
-                          ) : (
-                              <div
-                                  ref={currentTurnVideoRef}
-                                  className="video-element"
-                                  style={{
-                                      backgroundColor: '#000',
-                                      width: '600px',
-                                      height: '450px',
-                                      border: '2px solid #49beb7',
-                                      borderRadius: '8px',
-                                      overflow: 'hidden'
-                                  }}
-                              />
-                          )}
+                                  overflow: 'hidden'
+                              }}
+                          />
                           <div style={{
                               display: 'flex',
                               gap: '10px',
@@ -1127,77 +1132,67 @@ export default function GameSessionPage() {
               </div>
           )}
 
-          {phase === 'chameleon_win' && (
-              <div className="home-container" style={{
+          <div
+              style={{
+                  position: 'fixed',
+                  right: '32px',
+                  bottom: '32px',
+                  zIndex: 1000,
                   display: 'flex',
-                  justifyContent: 'center',
+                  gap: '24px',
+                  background: 'rgba(44, 62, 80, 0.13)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 24px rgba(44, 62, 80, 0.10)',
+                  padding: '8px 28px',
                   alignItems: 'center',
-                  minHeight: '100vh',
-                  padding: '20px',
-                  flexDirection: 'column',
-                  backgroundColor: '#222',
-                  color: 'white',
-                  textAlign: 'center'
-              }}>
-                  <h1 style={{ fontSize: '32px', marginBottom: '20px', color: '#ff6f61' }}>
-                      🦎 THE CHAMELEON GOT AWAY!
-                  </h1>
-                  <p style={{ fontSize: '20px', maxWidth: '600px' }}>
-                      YOU DIDNT IDENTIFY THE CHAMELEON! BETTER LUCK NEXT TIME!
-                  </p>
-                  <button
-                      onClick={handleReturn} // Replace later with how we start a new round
-                      style={{
-                          marginTop: '30px',
-                          backgroundColor: '#49beb7',
-                          color: 'white',
-                          border: 'none',
-                          padding: '10px 20px',
-                          fontSize: '16px',
-                          borderRadius: '8px',
-                          cursor: 'pointer'
-                      }}
-                  >
-                      Next Round
-                  </button>
-              </div>
-          )}
-
-          {phase === 'chameleon_loose' && (
-              <div className="home-container" style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  minHeight: '100vh',
-                  padding: '20px',
-                  flexDirection: 'column',
-                  backgroundColor: '#222',
-                  color: 'white',
-                  textAlign: 'center'
-              }}>
-                  <h1 style={{ fontSize: '32px', marginBottom: '20px', color: '#ff6f61' }}>
-                      🦎 THE CHAMELEON WAS CAUGHT!
-                  </h1>
-                  <p style={{ fontSize: '20px', maxWidth: '600px' }}>
-                      GOOD JOB YOU GOT HIM THIS TIME
-                  </p>
-                  <button
-                      onClick={handleReturn} // Replace later with how we start a new round
-                      style={{
-                          marginTop: '30px',
-                          backgroundColor: '#49beb7',
-                          color: 'white',
-                          border: 'none',
-                          padding: '10px 20px',
-                          fontSize: '16px',
-                          borderRadius: '8px',
-                          cursor: 'pointer'
-                      }}
-                  >
-                      Next Round
-                  </button>
-              </div>
-          )}
+                  backdropFilter: 'blur(8px)',
+              }}
+          >
+              <button
+                  onClick={handleMuteUnmute}
+                  style={{
+                      background: 'none',
+                      border: 'none',
+                      borderRadius: '12px',
+                      width: '44px',
+                      height: '44px',
+                      cursor: 'pointer',
+                      fontSize: '2rem',
+                      color: isMicOn ? '#fff' : '#e74c3c',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      outline: 'none',
+                      padding: 0,
+                      transition: 'color 0.2s',
+                  }}
+                  title={isMicOn ? "Mute Microphone" : "Unmute Microphone"}
+              >
+                  {isMicOn ? '🎤' : '🔇'}
+              </button>
+              <button
+                  onClick={handleCameraOnOff}
+                  style={{
+                      background: 'none',
+                      border: 'none',
+                      borderRadius: '12px',
+                      width: '44px',
+                      height: '44px',
+                      cursor: 'pointer',
+                      fontSize: '2rem',
+                      color: isCameraOn ? '#fff' : '#e74c3c',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      outline: 'none',
+                      padding: 0,
+                      transition: 'color 0.2s',
+                  }}
+                  title={isCameraOn ? "Turn Camera Off" : "Turn Camera On"}
+              >
+                  {isCameraOn ? '📷' : '🚫'}
+              </button>
+          </div>
       </>
   );
 }
