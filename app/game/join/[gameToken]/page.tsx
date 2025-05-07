@@ -49,7 +49,7 @@ export default function GameSessionPage() {
     const [gameState, setGameState] = useState<string | null>(null);
     const [votingTimeLeft, setVotingTimeLeft] = useState<number>(30);
 
-    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting';
+    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting' | 'chameleon_win' | 'chameleon_loose';
     const [phase, setPhase] = useState<Phase>('lobby');
 
     const [guessInput, setGuessInput] = useState('');
@@ -221,7 +221,7 @@ export default function GameSessionPage() {
                         setVotingTimeLeft(30); // Reset timer when voting starts
                     }
 
-                    if (data.actionType === "VOTE") {
+                    if (data.actionType === "END_VOTING") {
                         if (data.actionResult === "CHAMELEON_FOUND") {
                             // e.g. show a success message
                             console.log("Chameleon was found! 🎯");
@@ -258,7 +258,7 @@ export default function GameSessionPage() {
                 if (prev <= 1) {
                     clearInterval(timer);
                     // When timer reaches 0, navigate to results page
-                    router.push(`/results/chameleonCaught/${gameToken}`);
+                    /*router.push(`/results/chameleonCaught/${gameToken}`);*/
                     return 0;
                 }
                 return prev - 1;
@@ -890,20 +890,46 @@ export default function GameSessionPage() {
                               textAlign: 'center',
                               marginBottom: '10px'
                           }}>
-                              {isChameleon ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}` : `THE SECRET WORD IS: ${secretWord}! CURRENT TURN: ${currentTurn}`}
+                              {!currentTurn
+                                  ? 'ALL TURNS ARE OVER'
+                                  : isChameleon
+                                      ? `YOU ARE THE CHAMELEON! CURRENT TURN: ${currentTurn}`
+                                      : `THE SECRET WORD IS: ${secretWord}! CURRENT TURN: ${currentTurn}`}
                           </div>
-                          <div
-                              ref={currentTurnVideoRef}
-                              className="video-element"
-                              style={{
+
+                          {!currentTurn ? (
+                              <div style={{
                                   backgroundColor: '#000',
                                   width: '600px',
                                   height: '450px',
                                   border: '2px solid #49beb7',
                                   borderRadius: '8px',
-                                  overflow: 'hidden'
-                              }}
-                          />
+                                  display: 'flex',
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  color: 'white',
+                                  fontSize: '24px',
+                                  fontWeight: 'bold',
+                                  textAlign: 'center',
+                                  padding: '20px'
+                              }}>
+                                  YOU CAN START THE VOTING NOW
+                              </div>
+                          ) : (
+                              <div
+                                  ref={currentTurnVideoRef}
+                                  className="video-element"
+                                  style={{
+                                      backgroundColor: '#000',
+                                      width: '600px',
+                                      height: '450px',
+                                      border: '2px solid #49beb7',
+                                      borderRadius: '8px',
+                                      overflow: 'hidden'
+                                  }}
+                              />
+                          )}
+
                           <div style={{
                               display: 'flex',
                               gap: '10px',
@@ -1131,6 +1157,79 @@ export default function GameSessionPage() {
                   </div>
               </div>
           )}
+
+          {phase === 'chameleon_win' && (
+              <div className="home-container" style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: '100vh',
+                  padding: '20px',
+                  flexDirection: 'column',
+                  backgroundColor: '#222',
+                  color: 'white',
+                  textAlign: 'center'
+              }}>
+                  <h1 style={{ fontSize: '32px', marginBottom: '20px', color: '#ff6f61' }}>
+                      🦎 THE CHAMELEON GOT AWAY!
+                  </h1>
+                  <p style={{ fontSize: '20px', maxWidth: '600px' }}>
+                      YOU DIDNT IDENTIFY THE CHAMELEON! BETTER LUCK NEXT TIME!
+                  </p>
+                  <button
+                      onClick={handleReturn} // Replace later with how we start a new round
+                      style={{
+                          marginTop: '30px',
+                          backgroundColor: '#49beb7',
+                          color: 'white',
+                          border: 'none',
+                          padding: '10px 20px',
+                          fontSize: '16px',
+                          borderRadius: '8px',
+                          cursor: 'pointer'
+                      }}
+                  >
+                      Next Round
+                  </button>
+              </div>
+          )}
+
+          {phase === 'chameleon_loose' && (
+              <div className="home-container" style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: '100vh',
+                  padding: '20px',
+                  flexDirection: 'column',
+                  backgroundColor: '#222',
+                  color: 'white',
+                  textAlign: 'center'
+              }}>
+                  <h1 style={{ fontSize: '32px', marginBottom: '20px', color: '#ff6f61' }}>
+                      🦎 THE CHAMELEON WAS CAUGHT!
+                  </h1>
+                  <p style={{ fontSize: '20px', maxWidth: '600px' }}>
+                      GOOD JOB YOU GOT HIM THIS TIME
+                  </p>
+                  <button
+                      onClick={handleReturn} // Replace later with how we start a new round
+                      style={{
+                          marginTop: '30px',
+                          backgroundColor: '#49beb7',
+                          color: 'white',
+                          border: 'none',
+                          padding: '10px 20px',
+                          fontSize: '16px',
+                          borderRadius: '8px',
+                          cursor: 'pointer'
+                      }}
+                  >
+                      Next Round
+                  </button>
+              </div>
+          )}
+
 
           <div
               style={{
