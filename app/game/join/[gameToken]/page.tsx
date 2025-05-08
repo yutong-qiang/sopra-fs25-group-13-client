@@ -536,6 +536,58 @@ export default function GameSessionPage() {
         };
     }, [room, phase, currentTurn]);
 
+    // Add new useEffect for lobby phase
+    useEffect(() => {
+        if (!room || phase !== 'lobby') return;
+
+        // Detach existing tracks
+        detachAllVideoTracks(room.localParticipant);
+        room.participants.forEach(detachAllVideoTracks);
+
+        // ----- Local Video -----
+        const localContainer = localVideoRef.current;
+        if (localContainer) {
+            localContainer.innerHTML = '';
+            let localVideoTrack: LocalVideoTrack | undefined;
+            room.localParticipant.videoTracks.forEach(publication => {
+                if (publication.track?.kind === 'video') {
+                    localVideoTrack = publication.track as LocalVideoTrack;
+                }
+            });
+            if (localVideoTrack) {
+                const videoElement = localVideoTrack.attach();
+                videoElement.muted = true;
+                styleVideoElement(videoElement);
+                localContainer.appendChild(videoElement);
+            }
+        }
+
+        // ----- Remote Videos -----
+        const remoteParticipantsArray = Array.from(room.participants.values());
+        remoteParticipantsArray.forEach((participant, index) => {
+            const container = remoteVideoRefs.current?.[index];
+            if (!container) return;
+            container.innerHTML = '';
+            let videoTrack: RemoteVideoTrack | undefined;
+            participant.videoTracks.forEach(publication => {
+                if (publication.track?.kind === 'video') {
+                    videoTrack = publication.track as RemoteVideoTrack;
+                }
+            });
+            if (videoTrack) {
+                const videoElement = videoTrack.attach();
+                styleVideoElement(videoElement);
+                container.appendChild(videoElement);
+            }
+        });
+
+        // Cleanup
+        return () => {
+            detachAllVideoTracks(room.localParticipant);
+            room.participants.forEach(detachAllVideoTracks);
+        };
+    }, [room, phase]);
+
     const handleParticipantConnected = (participant: RemoteParticipant) => {
         setParticipants(prev => [...prev, participant]);
     
@@ -554,23 +606,9 @@ export default function GameSessionPage() {
         
         console.log(`Participant ${participant.identity} connected and assigned to slot ${videoContainerIndex}`);
     
-        // Track rendering function
+        // Track rendering function - only handle audio tracks now
         const attachTrack = (track: Track) => {
-            if (track.kind === 'video') {
-                try {
-                    const videoElement = (track as RemoteVideoTrack).attach();
-                    styleVideoElement(videoElement);
-                    
-                    // Ensure the container exists and clear it
-                    if (currentRef) {
-                        currentRef.innerHTML = '';
-                        currentRef.appendChild(videoElement);
-                        console.log(`Video track attached for ${participant.identity} in slot ${videoContainerIndex}`);
-                    }
-                } catch (err) {
-                    console.error('Error attaching video track:', err);
-                }
-            } else if (track.kind === 'audio') {
+            if (track.kind === 'audio') {
                 try {
                     const audioElement = (track as RemoteAudioTrack).attach();
                     audioElement.style.display = 'none';
@@ -592,17 +630,21 @@ export default function GameSessionPage() {
             }
         });
     
-        // 📥 Listen for new subscriptions
+        // 📥 Listen for new subscriptions - only handle audio tracks
         participant.on('trackSubscribed', (track) => {
-            console.log(`New track subscribed for ${participant.identity}:`, track.kind);
-            attachTrack(track);
+            if (track.kind === 'audio') {
+                console.log(`New audio track subscribed for ${participant.identity}`);
+                attachTrack(track);
+            }
         });
         
-        // Handle track publication (when a participant enables their camera/mic)
+        // Handle track publication - only handle audio tracks
         participant.on('trackPublished', (publication) => {
-            console.log(`Track published by ${participant.identity}:`, publication.trackName);
-            if (publication.isSubscribed && publication.track) {
-                attachTrack(publication.track);
+            if (publication.trackName === 'audio') {
+                console.log(`Audio track published by ${participant.identity}`);
+                if (publication.isSubscribed && publication.track) {
+                    attachTrack(publication.track);
+                }
             }
         });
     };
