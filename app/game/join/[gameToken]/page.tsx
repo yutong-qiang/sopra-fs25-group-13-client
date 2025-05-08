@@ -75,6 +75,8 @@ export default function GameSessionPage() {
     const [localAudioTrack, setLocalAudioTrack] = useState<LocalAudioTrack | null>(null);
     const [localVideoTrack, setLocalVideoTrack] = useState<LocalVideoTrack | null>(null);
 
+    const [videoUpdateCounter, setVideoUpdateCounter] = useState(0);
+
     const handleVote = (playerId: string) => {
         if (hasVoted) return;
 
@@ -586,7 +588,7 @@ export default function GameSessionPage() {
             detachAllVideoTracks(room.localParticipant);
             room.participants.forEach(detachAllVideoTracks);
         };
-    }, [room, phase, participants]);
+    }, [room, phase, participants, videoUpdateCounter]);
 
     const handleParticipantConnected = (participant: RemoteParticipant) => {
         setParticipants(prev => [...prev, participant]);
@@ -630,11 +632,18 @@ export default function GameSessionPage() {
             }
         });
     
-        // 📥 Listen for new subscriptions - only handle audio tracks
+        // 📥 Listen for new subscriptions - only handle audio tracks, but also listen for video for update counter
         participant.on('trackSubscribed', (track) => {
             if (track.kind === 'audio') {
                 console.log(`New audio track subscribed for ${participant.identity}`);
                 attachTrack(track);
+            } else if (track.kind === 'video') {
+                setVideoUpdateCounter(c => c + 1);
+            }
+        });
+        participant.on('trackUnsubscribed', (track) => {
+            if (track.kind === 'video') {
+                setVideoUpdateCounter(c => c + 1);
             }
         });
         
