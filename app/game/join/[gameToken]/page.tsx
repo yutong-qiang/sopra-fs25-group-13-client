@@ -49,10 +49,11 @@ export default function GameSessionPage() {
     const [gameState, setGameState] = useState<string | null>(null);
     const [votingTimeLeft, setVotingTimeLeft] = useState<number>(30);
 
-    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting' | 'chameleon_win' | 'chameleon_loose';
+    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting' | 'chameleon_win' | 'chameleon_guess' | 'waiting' | 'chameleon_loose';
     const [phase, setPhase] = useState<Phase>('lobby');
 
     const [guessInput, setGuessInput] = useState('');
+    const [chameleonGuessInput, setChameleonGuessInput] = useState('');
     const [messages, setMessages] = useState<string[]>([]);
 
     const videoBoxStyle = {
@@ -135,6 +136,7 @@ export default function GameSessionPage() {
             setPhase('game');
         }, 5000);
     };
+
 
     // === WebSocket Setup using STOMP over SockJS ===
     useEffect(() => {
@@ -223,15 +225,26 @@ export default function GameSessionPage() {
 
                     if (data.actionType === "END_VOTING") {
                         if (data.actionResult === "CHAMELEON_FOUND") {
-                            // e.g. show a success message
                             console.log("Chameleon was found! 🎯");
-                            setPhase('chameleon_loose');
+
+                            // Only allow the chameleon to guess
+                            if (isChameleon) {
+                                setPhase('chameleon_guess'); // show guess input to chameleon
+                            } else {
+                                setPhase('waiting'); // everyone else waits
+                            }
                         } else if (data.actionResult === "CHAMELEON_WON") {
-                            // e.g. show a failure message
                             console.log("Chameleon escaped! 🕵️‍♂️");
                             setPhase('chameleon_win');
                         }
-                        // Optionally, transition UI to next phase (e.g. guessing screen or end screen)
+                    }
+
+                    if (data.actionType === "CHAMELEON_GUESS") {
+                        if (data.actionResult === "CHAMELEON_WIN") {
+                            setPhase('chameleon_win');
+                        } else if (data.actionResult === "PLAYERS_WIN") {
+                            setPhase('chameleon_loose');
+                        }
                     }
                 });
             },
@@ -1157,6 +1170,70 @@ export default function GameSessionPage() {
                           })}
                       </div>
                   </div>
+              </div>
+          )}
+
+          {phase === 'chameleon_guess' && isChameleon && (
+              <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '100vh',
+                  padding: '20px',
+                  color: 'white'
+              }}>
+                  <h2 style={{ fontSize: '28px', marginBottom: '20px' }}>
+                      You have been caught! Can you still win by guessing the secret word?
+                  </h2>
+
+                  <input
+                      type="text"
+                      value={chameleonGuessInput}
+                      onChange={(e) => setChameleonGuessInput(e.target.value)}
+                      placeholder="Enter the secret word..."
+                      style={{
+                          padding: '10px 20px',
+                          fontSize: '16px',
+                          borderRadius: '8px',
+                          marginBottom: '20px',
+                          border: '2px solid #49beb7',
+                          width: '300px'
+                      }}
+                  />
+
+                  <button
+                      onClick={() => {
+                          if (chameleonGuessInput.trim()) {
+                              const payload = {
+                                  actionType: "CHAMELEON_GUESS",
+                                  gameSessionToken: gameToken,
+                                  actionContent: chameleonGuessInput.trim(),
+                              };
+
+                              if (wsRef.current && wsRef.current.connected) {
+                                  wsRef.current.publish({
+                                      destination: '/game/player-action',
+                                      body: JSON.stringify(payload),
+                                      headers: {
+                                          'auth-token': token,
+                                      },
+                                  });
+                              } else {
+                                  console.warn('WebSocket not connected');
+                              }
+                          }
+                      }}
+                  >
+                      Submit Guess
+                  </button>
+              </div>
+          )}
+
+          {phase === 'waiting' && !isChameleon && (
+              <div style={{ textAlign: 'center', padding: '40px', color: 'white' }}>
+                  <h2>The Chameleon has been found!</h2>
+                  <p>Waiting to see if they can guess the secret word...</p>
               </div>
           )}
 
