@@ -536,50 +536,40 @@ export default function GameSessionPage() {
         };
     }, [room, phase, currentTurn]);
 
-
-
     const handleParticipantConnected = (participant: RemoteParticipant) => {
         setParticipants(prev => [...prev, participant]);
-
+    
         const emptyIndex = remoteVideoRefs.current.findIndex(ref => ref && !ref.hasChildNodes());
         if (emptyIndex === -1) return;
         const currentRef = remoteVideoRefs.current[emptyIndex];
         if (!currentRef) return;
-
-        let videoAttached = false;
-
-        participant.tracks.forEach(pub => {
-            if (pub.track && pub.track.kind === 'video') {
-                const videoElement = (pub.track as RemoteVideoTrack).attach();
-                styleVideoElement(videoElement);
-                currentRef.innerHTML = '';
-                currentRef.appendChild(videoElement);
-                videoAttached = true;
-            } else if (pub.track && pub.track.kind === 'audio') {
-                const audioElement = (pub.track as RemoteAudioTrack).attach();
-                audioElement.style.display = 'none';
-                document.body.appendChild(audioElement);
-            }
-        });
-
-        participant.on('trackSubscribed', (track: Track) => {
+    
+        // Track rendering function
+        const attachTrack = (track: Track) => {
             if (track.kind === 'video') {
                 const videoElement = (track as RemoteVideoTrack).attach();
                 styleVideoElement(videoElement);
                 currentRef.innerHTML = '';
                 currentRef.appendChild(videoElement);
-            }
-            if (track.kind === 'audio') {
+            } else if (track.kind === 'audio') {
                 const audioElement = (track as RemoteAudioTrack).attach();
                 audioElement.style.display = 'none';
                 document.body.appendChild(audioElement);
             }
+        };
+    
+        // 🔧 Attach already available tracks
+        participant.tracks.forEach(publication => {
+            if (publication.isSubscribed && publication.track) {
+                attachTrack(publication.track);
+            }
         });
-
-        if (!videoAttached) {
-            currentRef.innerHTML = `<p style="color:white;text-align:center;margin-top:40px;">${participant.identity}</p>`;
-        }
+    
+        // 📥 Listen for new subscriptions
+        participant.on('trackSubscribed', attachTrack);
     };
+    
+
 
     const handleParticipantDisconnected = (participant: RemoteParticipant) => {
         setParticipants(prev => prev.filter(p => p !== participant));
