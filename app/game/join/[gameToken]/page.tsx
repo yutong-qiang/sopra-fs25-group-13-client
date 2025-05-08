@@ -76,6 +76,7 @@ export default function GameSessionPage() {
     const [localVideoTrack, setLocalVideoTrack] = useState<LocalVideoTrack | null>(null);
 
     const [videoUpdateCounter, setVideoUpdateCounter] = useState(0);
+    const [participantUpdateCounter, setParticipantUpdateCounter] = useState(0);
 
     const handleVote = (playerId: string) => {
         if (hasVoted) return;
@@ -314,6 +315,14 @@ export default function GameSessionPage() {
                 setRoom(room);
                 room.participants.forEach(participant => {
                     handleParticipantConnected(participant);
+                });
+
+                room.on('participantConnected', participant => {
+                    handleParticipantConnected(participant);
+                    setParticipantUpdateCounter(c => c + 1);
+                });
+                room.on('participantDisconnected', () => {
+                    setParticipantUpdateCounter(c => c + 1);
                 });
 
                 room.on('participantConnected', handleParticipantConnected);
@@ -588,7 +597,7 @@ export default function GameSessionPage() {
             detachAllVideoTracks(room.localParticipant);
             room.participants.forEach(detachAllVideoTracks);
         };
-    }, [room, phase, participants, videoUpdateCounter]);
+    }, [room, phase, participants, videoUpdateCounter, participantUpdateCounter]);
 
     const handleParticipantConnected = (participant: RemoteParticipant) => {
         setParticipants(prev => [...prev, participant]);
