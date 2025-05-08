@@ -534,7 +534,7 @@ export default function GameSessionPage() {
                 currentTurnVideoRef.current.innerHTML = '';
             }
         };
-    }, [room, phase, currentTurn]);
+    }, [room, phase, currentTurn, participants]);
 
     // Add new useEffect for lobby phase
     useEffect(() => {
@@ -586,7 +586,7 @@ export default function GameSessionPage() {
             detachAllVideoTracks(room.localParticipant);
             room.participants.forEach(detachAllVideoTracks);
         };
-    }, [room, phase]);
+    }, [room, phase, participants]);
 
     const handleParticipantConnected = (participant: RemoteParticipant) => {
         setParticipants(prev => [...prev, participant]);
