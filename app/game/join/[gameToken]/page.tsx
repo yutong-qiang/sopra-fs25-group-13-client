@@ -526,36 +526,73 @@ export default function GameSessionPage() {
     const handleParticipantConnected = (participant: RemoteParticipant) => {
         setParticipants(prev => [...prev, participant]);
     
+        // Find an empty slot for this participant
         const emptyIndex = remoteVideoRefs.current.findIndex(ref => ref && !ref.hasChildNodes());
-        if (emptyIndex === -1) return;
+        if (emptyIndex === -1) {
+            console.warn('No empty video slots available for new participant:', participant.identity);
+            return;
+        }
+        
         const currentRef = remoteVideoRefs.current[emptyIndex];
         if (!currentRef) return;
+        
+        // Store participant index in a constant
+        const videoContainerIndex = emptyIndex;
+        
+        console.log(`Participant ${participant.identity} connected and assigned to slot ${videoContainerIndex}`);
     
         // Track rendering function
         const attachTrack = (track: Track) => {
             if (track.kind === 'video') {
-                const videoElement = (track as RemoteVideoTrack).attach();
-                styleVideoElement(videoElement);
-                currentRef.innerHTML = '';
-                currentRef.appendChild(videoElement);
+                try {
+                    const videoElement = (track as RemoteVideoTrack).attach();
+                    styleVideoElement(videoElement);
+                    
+                    // Ensure the container exists and clear it
+                    if (currentRef) {
+                        currentRef.innerHTML = '';
+                        currentRef.appendChild(videoElement);
+                        console.log(`Video track attached for ${participant.identity} in slot ${videoContainerIndex}`);
+                    }
+                } catch (err) {
+                    console.error('Error attaching video track:', err);
+                }
             } else if (track.kind === 'audio') {
-                const audioElement = (track as RemoteAudioTrack).attach();
-                audioElement.style.display = 'none';
-                document.body.appendChild(audioElement);
+                try {
+                    const audioElement = (track as RemoteAudioTrack).attach();
+                    audioElement.style.display = 'none';
+                    document.body.appendChild(audioElement);
+                    console.log(`Audio track attached for ${participant.identity}`);
+                } catch (err) {
+                    console.error('Error attaching audio track:', err);
+                }
             }
         };
     
         // 🔧 Attach already available tracks
         participant.tracks.forEach(publication => {
+            console.log(`Checking track for ${participant.identity}:`, publication.trackName, 'isSubscribed:', publication.isSubscribed);
+            
             if (publication.isSubscribed && publication.track) {
+                console.log(`Attaching available ${publication.trackName} track for ${participant.identity}`);
                 attachTrack(publication.track);
             }
         });
     
         // 📥 Listen for new subscriptions
-        participant.on('trackSubscribed', attachTrack);
+        participant.on('trackSubscribed', (track) => {
+            console.log(`New track subscribed for ${participant.identity}:`, track.kind);
+            attachTrack(track);
+        });
+        
+        // Handle track publication (when a participant enables their camera/mic)
+        participant.on('trackPublished', (publication) => {
+            console.log(`Track published by ${participant.identity}:`, publication.trackName);
+            if (publication.isSubscribed && publication.track) {
+                attachTrack(publication.track);
+            }
+        });
     };
-    
 
 
     const handleParticipantDisconnected = (participant: RemoteParticipant) => {
