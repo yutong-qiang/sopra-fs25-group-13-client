@@ -37,7 +37,6 @@ export default function GameSessionPage() {
     const [isCopied, setIsCopied] = useState(false);
 
     const [room, setRoom] = useState<Room | null>(null);
-    const [participants, setParticipants] = useState<RemoteParticipant[]>([]);
     const localVideoRef = useRef<HTMLDivElement>(null);
     const remoteVideoRefs = useRef<Array<HTMLDivElement | null>>([]);
     const currentTurnVideoRef = useRef<HTMLDivElement>(null);
@@ -545,7 +544,7 @@ export default function GameSessionPage() {
                 currentTurnVideoRef.current.innerHTML = '';
             }
         };
-    }, [room, phase, currentTurn, participants]);
+    }, [room, phase, currentTurn]);
 
     // Add new useEffect for lobby phase
     useEffect(() => {
@@ -597,26 +596,11 @@ export default function GameSessionPage() {
             detachAllVideoTracks(room.localParticipant);
             room.participants.forEach(detachAllVideoTracks);
         };
-    }, [room, phase, participants, videoUpdateCounter, participantUpdateCounter]);
+    }, [room, phase, videoUpdateCounter, participantUpdateCounter]);
 
     const handleParticipantConnected = (participant: RemoteParticipant) => {
-        setParticipants(prev => [...prev, participant]);
-    
-        // Find an empty slot for this participant
-        const emptyIndex = remoteVideoRefs.current.findIndex(ref => ref && !ref.hasChildNodes());
-        if (emptyIndex === -1) {
-            console.warn('No empty video slots available for new participant:', participant.identity);
-            return;
-        }
+        console.log(`Participant ${participant.identity} connected`);
         
-        const currentRef = remoteVideoRefs.current[emptyIndex];
-        if (!currentRef) return;
-        
-        // Store participant index in a constant
-        const videoContainerIndex = emptyIndex;
-        
-        console.log(`Participant ${participant.identity} connected and assigned to slot ${videoContainerIndex}`);
-    
         // Track rendering function - only handle audio tracks now
         const attachTrack = (track: Track) => {
             if (track.kind === 'audio') {
@@ -669,7 +653,7 @@ export default function GameSessionPage() {
 
 
     const handleParticipantDisconnected = (participant: RemoteParticipant) => {
-        setParticipants(prev => prev.filter(p => p !== participant));
+        console.log(`Participant ${participant.identity} disconnected`);
         remoteVideoRefs.current.forEach(ref => {
             if (ref && ref.hasChildNodes()) {
                 const video = ref.querySelector('video');
@@ -721,9 +705,8 @@ export default function GameSessionPage() {
         videoElement.style.objectFit = 'cover';
     };
 
-    const remoteParticipants = room
-        ? Array.from(room.participants.values())
-        : [];
+    const remoteParticipants = room ? Array.from(room.participants.values()) : [];
+    const allNames = [room?.localParticipant?.identity || "You (Local)", ...remoteParticipants.map(p => p.identity)];
 
     function handleMuteUnmute() {
         if (localAudioTrack) {
@@ -863,14 +846,13 @@ export default function GameSessionPage() {
                               </button>
                           </div>
                           <div style={{ fontSize: '1.5rem', opacity: 0.9 }}>
-                              ({participants.length + 1}/8 players)
+                              ({remoteParticipants.length + 1}/8 players)
                           </div>
                           <div style={{ fontSize: '1.2rem', color: 'white', marginBottom: '10px' }}>
-                              Connected Players: {participants.length + 1}
+                              Connected Players: {remoteParticipants.length + 1}
                               <ul>
-                                  <li>You (Local)</li>
-                                  {participants.map((p, index) => (
-                                      <li key={index}>{p.identity}</li>
+                                  {allNames.map((name, index) => (
+                                      <li key={index}>{name}</li>
                                   ))}
                               </ul>
                           </div>
