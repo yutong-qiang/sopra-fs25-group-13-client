@@ -48,7 +48,7 @@ export default function GameSessionPage() {
     const [gameState, setGameState] = useState<string | null>(null);
     const [votingTimeLeft, setVotingTimeLeft] = useState<number>(30);
 
-    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting' | 'chameleon_win' | 'chameleon_guess' | 'waiting' | 'chameleon_loose';
+    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting' | 'chameleon_win' | 'chameleon_guess' | 'chameleon_loose';
     const [phase, setPhase] = useState<Phase>('lobby');
 
     const [guessInput, setGuessInput] = useState('');
@@ -228,13 +228,7 @@ export default function GameSessionPage() {
                     if (data.actionType === "END_VOTING") {
                         if (data.actionResult === "CHAMELEON_FOUND") {
                             console.log("Chameleon was found! 🎯");
-
-                            // Only allow the chameleon to guess
-                            if (isChameleon) {
-                                setPhase('chameleon_guess'); // show guess input to chameleon
-                            } else {
-                                setPhase('waiting'); // everyone else waits
-                            }
+                            setPhase('chameleon_guess')
                         } else if (data.actionResult === "CHAMELEON_WON") {
                             console.log("Chameleon escaped! 🕵️‍♂️");
                             setPhase('chameleon_win');
@@ -1292,67 +1286,71 @@ export default function GameSessionPage() {
               </div>
           )}
 
-          {phase === 'chameleon_guess' && isChameleon && (
-              <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '100vh',
-                  padding: '20px',
-                  color: 'white'
-              }}>
-                  <h2 style={{ fontSize: '28px', marginBottom: '20px' }}>
-                      You have been caught! Can you still win by guessing the secret word?
-                  </h2>
 
-                  <input
-                      type="text"
-                      value={chameleonGuessInput}
-                      onChange={(e) => setChameleonGuessInput(e.target.value)}
-                      placeholder="Enter the secret word..."
-                      style={{
-                          padding: '10px 20px',
-                          fontSize: '16px',
-                          borderRadius: '8px',
-                          marginBottom: '20px',
-                          border: '2px solid #49beb7',
-                          width: '300px'
-                      }}
-                  />
+          {phase === 'chameleon_guess' && (
+              <div className="home-container">
+                  {isChameleon ? (
+                      <div className={"chameleon_box"}
+                          style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minHeight: '100vh',
+                          padding: '20px',
+                          color: 'white'
+                      }}>
+                          <h2 style={{ fontSize: '28px', marginBottom: '20px' }}>
+                              You have been caught! Can you still win by guessing the secret word?
+                          </h2>
 
-                  <button
-                      onClick={() => {
-                          if (chameleonGuessInput.trim()) {
-                              const payload = {
-                                  actionType: "CHAMELEON_GUESS",
-                                  gameSessionToken: gameToken,
-                                  actionContent: chameleonGuessInput.trim(),
-                              };
+                          <input
+                              type="text"
+                              value={chameleonGuessInput}
+                              onChange={(e) => setChameleonGuessInput(e.target.value)}
+                              placeholder="Enter the secret word..."
+                              style={{
+                                  padding: '10px 20px',
+                                  fontSize: '16px',
+                                  borderRadius: '8px',
+                                  marginBottom: '20px',
+                                  border: '2px solid #49beb7',
+                                  width: '300px'
+                              }}
+                          />
 
-                              if (wsRef.current && wsRef.current.connected) {
-                                  wsRef.current.publish({
-                                      destination: '/game/player-action',
-                                      body: JSON.stringify(payload),
-                                      headers: {
-                                          'auth-token': token,
-                                      },
-                                  });
-                              } else {
-                                  console.warn('WebSocket not connected');
-                              }
-                          }
-                      }}
-                  >
-                      Submit Guess
-                  </button>
-              </div>
-          )}
+                          <button
+                              onClick={() => {
+                                  if (chameleonGuessInput.trim()) {
+                                      const payload = {
+                                          actionType: "CHAMELEON_GUESS",
+                                          gameSessionToken: gameToken,
+                                          actionContent: chameleonGuessInput.trim(),
+                                      };
 
-          {phase === 'waiting' && !isChameleon && (
-              <div style={{ textAlign: 'center', padding: '40px', color: 'white' }}>
-                  <h2>The Chameleon has been found!</h2>
-                  <p>Waiting to see if they can guess the secret word...</p>
+                                      if (wsRef.current && wsRef.current.connected) {
+                                          wsRef.current.publish({
+                                              destination: '/game/player-action',
+                                              body: JSON.stringify(payload),
+                                              headers: {
+                                                  'auth-token': token,
+                                              },
+                                          });
+                                      } else {
+                                          console.warn('WebSocket not connected');
+                                      }
+                                  }
+                              }}
+                          >
+                              Submit Guess
+                          </button>
+                      </div>
+                  ) : (
+                      <div className="chameleon-box">
+                          <h1 className="chameleon-title">THE <span className="highlight">CHAMELEON</span> WAS DISCOVERED!</h1>
+                          <h1 className="chameleon-subtitle">WAITING FOR THEM TO GUESS THE SECRET WORD!</h1>
+                      </div>
+                  )}
               </div>
           )}
 
