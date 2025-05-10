@@ -1127,11 +1127,12 @@ export default function GameSessionPage() {
                   justifyContent: 'center',
                   alignItems: 'center',
                   minHeight: '100vh',
-                  padding: '20px',
-                  flexDirection: 'column'
+                  padding: '20px'
               }}>
-                  {/* Header Text */}
+                  {/* Header Text - Moved outside the containers to be at the top */}
                   <div style={{
+                      position: 'absolute',
+                      top: '40px',
                       backgroundColor: '#49beb7',
                       borderRadius: '25px',
                       padding: '10px 20px',
@@ -1139,7 +1140,8 @@ export default function GameSessionPage() {
                       fontSize: '18px',
                       fontWeight: 'bold',
                       textAlign: 'center',
-                      marginBottom: '30px'
+                      width: '350px',
+                      zIndex: 10
                   }}>
                       <span>VOTE FOR THE CHAMELEON! </span>
                       <span style={{ marginLeft: '10px' }}>
@@ -1147,96 +1149,144 @@ export default function GameSessionPage() {
                       </span>
                   </div>
 
-                  {/* Video container grid */}
-                  <div className="video-container">
-                      <div className="video-wrapper" style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(4, 150px)',
-                          gap: '20px',
-                          justifyContent: 'center'
+                  <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      maxWidth: '1200px',
+                      marginTop: '40px'
+                  }}>
+                      {/* Main voting section - Left side */}
+                      <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          width: '70%'
                       }}>
-                          {/* Local Video */}
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                              <div
-                                  ref={localVideoRef}
-                                  className="video-element"
-                                  style={videoBoxStyle}
-                              />
-                              <span style={{ color: 'white' }}>{localParticipant?.identity}</span> {/* Display the username */}
-                              <button
-                                  disabled={hasVoted || localParticipant?.identity === 'localParticipantId'}
-                                  style={{
-                                      marginTop: '8px',
-                                      backgroundColor: hasVoted || localParticipant?.identity === 'localParticipantId' ? '#ccc' : '#49beb7',
-                                      color: 'white',
-                                      border: 'none',
-                                      padding: '5px 10px',
-                                      borderRadius: '5px',
-                                      cursor: hasVoted || localParticipant?.identity === 'localParticipantId' ? 'default' : 'pointer'
-                                  }}
-                                  onClick={() => {
-                                      if (localParticipant?.identity) {
-                                          handleVote(localParticipant.identity);
-                                      }
-                                  }}
-                              >
-                                  VOTE
-                              </button>
-                          </div>
-
-                          {/* Remote Videos */}
-                          {Array(7).fill(null).map((_, index) => {
-                              const isFilled = index < remoteParticipants.length;
-                              const participant = remoteParticipants[index];
-
-                              return (
-                                  <div key={index} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          {/* Video container grid */}
+                          <div className="video-container">
+                              <div className="video-wrapper" style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(4, 150px)',
+                                  gap: '20px',
+                                  justifyContent: 'center'
+                              }}>
+                                  {/* Local Video */}
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                       <div
-                                          ref={(el: HTMLDivElement | null) => {
-                                              if (remoteVideoRefs.current) {
-                                                  remoteVideoRefs.current[index] = el;
+                                          ref={localVideoRef}
+                                          className="video-element"
+                                          style={videoBoxStyle}
+                                      />
+                                      <span style={{ color: 'white', marginTop: '8px' }}>{localParticipant?.identity}</span>
+                                      <button
+                                          disabled={hasVoted || localParticipant?.identity === 'localParticipantId'}
+                                          style={{
+                                              marginTop: '8px',
+                                              backgroundColor: hasVoted || localParticipant?.identity === 'localParticipantId' ? '#ccc' : '#49beb7',
+                                              color: 'white',
+                                              border: 'none',
+                                              padding: '5px 10px',
+                                              borderRadius: '5px',
+                                              cursor: hasVoted || localParticipant?.identity === 'localParticipantId' ? 'default' : 'pointer'
+                                          }}
+                                          onClick={() => {
+                                              if (localParticipant?.identity) {
+                                                  handleVote(localParticipant.identity);
                                               }
                                           }}
-                                          className={isFilled ? "video-element" : "chameleon-box"}
-                                          style={{
-                                              backgroundColor: isFilled ? '#000' : 'green',
-                                              minHeight: '150px',
-                                              minWidth: '150px',
-                                              border: '2px solid #49beb7',
-                                              borderRadius: '8px',
-                                              overflow: 'hidden',
-                                              display: 'flex',
-                                              justifyContent: 'center',
-                                              alignItems: 'center',
-                                              color: 'white',
-                                              fontWeight: 'bold',
-                                              fontSize: '16px'
-                                          }}
                                       >
-                                      </div>
-                                      {isFilled && (
-                                          <>
-                                              <span style={{ color: 'white' }}>{participant?.identity}</span> {/* Display the username */}
-                                              <button
-                                                  disabled={hasVoted}
-                                                  style={{
-                                                      marginTop: '8px',
-                                                      backgroundColor: hasVoted ? '#ccc' : '#49beb7',
-                                                      color: 'white',
-                                                      border: 'none',
-                                                      padding: '5px 10px',
-                                                      borderRadius: '5px',
-                                                      cursor: hasVoted ? 'default' : 'pointer'
-                                                  }}
-                                                  onClick={() => handleVote(participant?.identity)} // Use the participant's identity for voting
-                                              >
-                                                  VOTE
-                                              </button>
-                                          </>
-                                      )}
+                                          VOTE
+                                      </button>
                                   </div>
-                              );
-                          })}
+
+                                  {/* Remote Videos */}
+                                  {Array(7).fill(null).map((_, index) => {
+                                      const isFilled = index < remoteParticipants.length;
+                                      const participant = remoteParticipants[index];
+
+                                      return (
+                                          <div key={index} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                              <div
+                                                  ref={(el: HTMLDivElement | null) => {
+                                                      if (remoteVideoRefs.current) {
+                                                          remoteVideoRefs.current[index] = el;
+                                                      }
+                                                  }}
+                                                  className={isFilled ? "video-element" : "chameleon-box"}
+                                                  style={{
+                                                      backgroundColor: isFilled ? '#000' : 'green',
+                                                      minHeight: '150px',
+                                                      minWidth: '150px',
+                                                      border: '2px solid #49beb7',
+                                                      borderRadius: '8px',
+                                                      overflow: 'hidden',
+                                                      display: 'flex',
+                                                      justifyContent: 'center',
+                                                      alignItems: 'center',
+                                                      color: 'white',
+                                                      fontWeight: 'bold',
+                                                      fontSize: '16px'
+                                                  }}
+                                              >
+                                              </div>
+                                              {isFilled && (
+                                                  <>
+                                                      <span style={{ color: 'white', marginTop: '8px' }}>{participant?.identity}</span>
+                                                      <button
+                                                          disabled={hasVoted}
+                                                          style={{
+                                                              marginTop: '8px',
+                                                              backgroundColor: hasVoted ? '#ccc' : '#49beb7',
+                                                              color: 'white',
+                                                              border: 'none',
+                                                              padding: '5px 10px',
+                                                              borderRadius: '5px',
+                                                              cursor: hasVoted ? 'default' : 'pointer'
+                                                          }}
+                                                          onClick={() => handleVote(participant?.identity)}
+                                                      >
+                                                          VOTE
+                                                      </button>
+                                                  </>
+                                              )}
+                                          </div>
+                                      );
+                                  })}
+                              </div>
+                          </div>
+                      </div>
+
+                      {/* Word List Box - Right side */}
+                      <div style={{
+                          width: '25%',
+                          marginRight: '20px',
+                          marginTop: '30px'
+                      }}>
+                          <div style={{
+                              width: '100%',
+                              height: '450px',
+                              border: '2px solid #49beb7',
+                              borderRadius: '8px',
+                              padding: '20px',
+                              backgroundColor: 'rgba(73, 190, 183, 0.2)'
+                          }}>
+                              <h2 style={{
+                                  color: '#fff',
+                                  fontSize: '24px',
+                                  textAlign: 'center',
+                                  marginBottom: '20px',
+                                  borderBottom: '2px solid #49beb7',
+                                  paddingBottom: '10px'
+                              }}>
+                                  WORD LIST
+                              </h2>
+                              <ul style={{ color: '#49beb7', fontSize: '18px', listStyleType: 'none', padding: 0 }}>
+                                  {messages.map((msg, idx) => (
+                                      <li key={idx} style={{ marginBottom: '15px', textAlign: 'center' }}>{msg}</li>
+                                  ))}
+                              </ul>
+                          </div>
                       </div>
                   </div>
               </div>
