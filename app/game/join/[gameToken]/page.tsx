@@ -54,6 +54,7 @@ export default function GameSessionPage() {
     const [guessInput, setGuessInput] = useState('');
     const [chameleonGuessInput, setChameleonGuessInput] = useState('');
     const [messages, setMessages] = useState<string[]>([]);
+    const [warningMessage, setWarningMessage] = useState<string | null>(null);
 
     const videoBoxStyle = {
         backgroundColor: '#000',
@@ -1011,63 +1012,97 @@ export default function GameSessionPage() {
                           <div style={{
                               display: 'flex',
                               gap: '10px',
-                              width: '100%'
+                              width: '100%',
+                              flexDirection: 'column'
                           }}>
-                              <input
-                                  type="text"
-                                  placeholder="Type your guess..."
-                                  value={guessInput}
-                                  onChange={(e) => setGuessInput(e.target.value)}
-                                  style={{
-                                      flex: 1,
-                                      height: '45px',
-                                      padding: '0 20px',
-                                      borderRadius: '25px',
-                                      border: '2px solid #49beb7',
-                                      backgroundColor: 'white',
-                                      color: '#333',
-                                      fontSize: '16px',
-                                      outline: 'none'
-                                  }}
-                              />
-                              <button
-                                  onClick={() => {
-                                      if (guessInput.trim()) {
-                                          const messageContent = guessInput.trim();
-  
-                                          const payload = {
-                                              actionType: "GIVE_HINT",
-                                              gameSessionToken: gameToken,
-                                              actionContent: messageContent,
-                                          };
-  
-                                          if (wsRef.current && wsRef.current.connected) {
-                                              wsRef.current.publish({
-                                                  destination: '/game/player-action',
-                                                  body: JSON.stringify(payload),
-                                                  headers: {
-                                                      'auth-token': token
-                                                  }
-                                              });
-                                          } else {
-                                              console.warn('WebSocket not connected');
-                                          }
-                                      }
-                                  }}
-                                  style={{
-                                      padding: '10px 30px',
-                                      borderRadius: '25px',
-                                      border: 'none',
-                                      backgroundColor: '#49beb7',
+                              {warningMessage && (
+                                  <div style={{
+                                      backgroundColor: 'rgba(255, 99, 71, 0.7)',
                                       color: 'white',
-                                      fontSize: '20px',
-                                      fontWeight: 'bold',
-                                      cursor: 'pointer',
-                                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                                  }}
-                              >
-                                  SEND
-                              </button>
+                                      padding: '8px 12px',
+                                      borderRadius: '8px',
+                                      textAlign: 'center',
+                                      marginBottom: '5px',
+                                      fontSize: '14px',
+                                      fontWeight: 'bold'
+                                  }}>
+                                      {warningMessage}
+                                  </div>
+                              )}
+                              <div style={{
+                                  display: 'flex',
+                                  gap: '10px',
+                                  width: '100%'
+                              }}>
+                                  <input
+                                      type="text"
+                                      placeholder="Type your guess..."
+                                      value={guessInput}
+                                      onChange={(e) => {
+                                          setGuessInput(e.target.value);
+                                          // Clear warning when input changes
+                                          if (warningMessage) setWarningMessage(null);
+                                      }}
+                                      style={{
+                                          flex: 1,
+                                          height: '45px',
+                                          padding: '0 20px',
+                                          borderRadius: '25px',
+                                          border: '2px solid #49beb7',
+                                          backgroundColor: 'white',
+                                          color: '#333',
+                                          fontSize: '16px',
+                                          outline: 'none'
+                                      }}
+                                  />
+                                  <button
+                                      onClick={() => {
+                                          if (guessInput.trim()) {
+                                              const messageContent = guessInput.trim();
+                                              
+                                              // Check if the input contains multiple words
+                                              if (messageContent.includes(' ')) {
+                                                  setWarningMessage("Only one word allowed!");
+                                                  return;
+                                              }
+      
+                                              const payload = {
+                                                  actionType: "GIVE_HINT",
+                                                  gameSessionToken: gameToken,
+                                                  actionContent: messageContent,
+                                              };
+      
+                                              if (wsRef.current && wsRef.current.connected) {
+                                                  wsRef.current.publish({
+                                                      destination: '/game/player-action',
+                                                      body: JSON.stringify(payload),
+                                                      headers: {
+                                                          'auth-token': token
+                                                      }
+                                                  });
+                                              } else {
+                                                  console.warn('WebSocket not connected');
+                                              }
+
+                                              // Clear the input after successful send
+                                              setGuessInput('');
+                                          }
+                                      }}
+                                      style={{
+                                          padding: '10px 30px',
+                                          borderRadius: '25px',
+                                          border: 'none',
+                                          backgroundColor: '#49beb7',
+                                          color: 'white',
+                                          fontSize: '20px',
+                                          fontWeight: 'bold',
+                                          cursor: 'pointer',
+                                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                      }}
+                                  >
+                                      SEND
+                                  </button>
+                              </div>
                           </div>
                       </div>
                       <div style={{
