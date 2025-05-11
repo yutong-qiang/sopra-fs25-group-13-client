@@ -115,7 +115,8 @@ _Continue with the same table format as above._
 | Yutong |  |  |  |  |
 | Lorenzo |  |  |  |  |
 | Lorenzo |  |  |  |  |
-| Luca |  |  |  |  |
-| Luca |  |  |  |  |
+| Luca | 08.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/b47941580a910d838fbc7f30c507170955a0f700 | implemented being able to guess the secret word when caught #56, #57, #59, #60, #61, #62, #63 | the chameleon can now win the game by guessing the secret word correctly |
+| Luca | 07.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/a307ce68acc913ae936eb124b5bef25564c640a1 | Changed display when all turns are over and added victory pages after voting #50, #56, #57 | after voting the correct outcome happens based on who was voted for |
+| Luca | 11.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/de82b95a4bd86c6c4d1297d3033cfd05f036a9e8 | added different victory screens based on victory condition and updated UI for victory and ready to vote | at victory the correct messages and UI elements are displayed to the players based on their roles |
 
 _Continue with the same table format as above._
