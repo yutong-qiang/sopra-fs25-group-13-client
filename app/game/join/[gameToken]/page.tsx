@@ -48,7 +48,7 @@ export default function GameSessionPage() {
     const [gameState, setGameState] = useState<string | null>(null);
     const [votingTimeLeft, setVotingTimeLeft] = useState<number>(30);
 
-    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting' | 'chameleon_win' | 'chameleon_guess' | 'chameleon_loose';
+    type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting' | 'chameleon_win'| 'chameleon_word_win' | 'chameleon_guess' | 'chameleon_loose';
     const [phase, setPhase] = useState<Phase>('lobby');
 
     const [guessInput, setGuessInput] = useState('');
@@ -240,7 +240,7 @@ export default function GameSessionPage() {
 
                     if (data.actionType === "CHAMELEON_GUESS") {
                         if (data.actionResult === "CHAMELEON_WIN") {
-                            setPhase('chameleon_win');
+                            setPhase('chameleon_word_win');
                         } else if (data.actionResult === "PLAYERS_WIN") {
                             setPhase('chameleon_loose');
                         }
@@ -979,7 +979,8 @@ export default function GameSessionPage() {
                           </div>
 
                           {!currentTurn ? (
-                              <div style={{
+                              <div className={'chameleon-box'}
+                                  style={{
                                   backgroundColor: '#000',
                                   width: '600px',
                                   height: '450px',
@@ -989,12 +990,12 @@ export default function GameSessionPage() {
                                   justifyContent: 'center',
                                   alignItems: 'center',
                                   color: 'white',
-                                  fontSize: '24px',
+                                  fontSize: '46px',
                                   fontWeight: 'bold',
                                   textAlign: 'center',
                                   padding: '20px'
                               }}>
-                                  YOU CAN START THE VOTING NOW
+                                  START THE VOTING NOW TO CATCH THE CHAMELEON!
                               </div>
                           ) : (
                               <div
@@ -1336,7 +1337,7 @@ export default function GameSessionPage() {
           {phase === 'chameleon_guess' && (
               <div className="home-container">
                   {isChameleon ? (
-                      <div className={"chameleon_box"}
+                      <div className={"chameleon-box"}
                           style={{
                           display: 'flex',
                           flexDirection: 'column',
@@ -1412,27 +1413,93 @@ export default function GameSessionPage() {
                   color: 'white',
                   textAlign: 'center'
               }}>
-                  <h1 style={{ fontSize: '32px', marginBottom: '20px', color: '#ff6f61' }}>
-                      🦎 THE CHAMELEON GOT AWAY!
-                  </h1>
-                  <p style={{ fontSize: '20px', maxWidth: '600px' }}>
-                      YOU DIDNT IDENTIFY THE CHAMELEON! BETTER LUCK NEXT TIME!
-                  </p>
-                  <button
-                      onClick={handleReturn} // Replace later with how we start a new round
-                      style={{
-                          marginTop: '30px',
-                          backgroundColor: '#49beb7',
-                          color: 'white',
-                          border: 'none',
-                          padding: '10px 20px',
-                          fontSize: '16px',
-                          borderRadius: '8px',
-                          cursor: 'pointer'
-                      }}
-                  >
-                      Next Round
-                  </button>
+                  <div className={"button-container"}>
+                      {isChameleon ? (
+                          <>
+                              <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#00d6b1', borderBottom: '2px solid #00d6b1' }}>
+                                  🎉 YOU GOT AWAY, CHAMELEON!
+                              </h1>
+                              <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
+                                  GREAT JOB BLENDING IN! NO ONE CAUGHT YOU.
+                              </p>
+                          </>
+                      ) : (
+                          <>
+                              <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#d60006', borderBottom: '2px solid #d60006' }}>
+                                  🦎 THE CHAMELEON GOT AWAY!
+                              </h1>
+                              <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
+                                  YOU DID NOT IDENTIFY THE CHAMELEON! BETTER LUCK NEXT TIME!
+                              </p>
+                          </>
+                      )}
+                      <button
+                          onClick={handleReturn} // Replace later with how we start a new round
+                          style={{
+                              marginTop: '30px',
+                              backgroundColor: '#49beb7',
+                              color: 'white',
+                              border: 'none',
+                              padding: '10px 20px',
+                              fontSize: '16px',
+                              borderRadius: '8px',
+                              cursor: 'pointer'
+                          }}
+                      >
+                          Next Round
+                      </button>
+                  </div>
+              </div>
+          )}
+
+          {phase === 'chameleon_word_win' && (
+              <div className="home-container" style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: '100vh',
+                  padding: '20px',
+                  flexDirection: 'column',
+                  backgroundColor: '#222',
+                  color: 'white',
+                  textAlign: 'center'
+              }}>
+                  <div className={"button-container"}>
+                      {isChameleon ? (
+                          <>
+                              <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#00d6b1', borderBottom: '2px solid #00d6b1' }}>
+                                  🎉 YOU FIGURED OUT THE SECRET WORD, CHAMELEON!
+                              </h1>
+                              <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
+                                  GREAT DEDUCTION SKILLS! NO ONE CAN FOOL YOU.
+                              </p>
+                          </>
+                      ) : (
+                          <>
+                              <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#d60006', borderBottom: '2px solid #d60006' }}>
+                                  🦎 THE CHAMELEON FIGURED OU THE SECRET WORD!
+                              </h1>
+                              <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
+                                  YOU WILL HAVE TO BE MORE CAREFUL NEXT TIME!
+                              </p>
+                          </>
+                      )}
+                      <button
+                          onClick={handleReturn} // Replace later with how we start a new round
+                          style={{
+                              marginTop: '30px',
+                              backgroundColor: '#49beb7',
+                              color: 'white',
+                              border: 'none',
+                              padding: '10px 20px',
+                              fontSize: '16px',
+                              borderRadius: '8px',
+                              cursor: 'pointer'
+                          }}
+                      >
+                          Next Round
+                      </button>
+                  </div>
               </div>
           )}
 
@@ -1448,27 +1515,42 @@ export default function GameSessionPage() {
                   color: 'white',
                   textAlign: 'center'
               }}>
-                  <h1 style={{ fontSize: '32px', marginBottom: '20px', color: '#ff6f61' }}>
-                      🦎 THE CHAMELEON WAS CAUGHT!
-                  </h1>
-                  <p style={{ fontSize: '20px', maxWidth: '600px' }}>
-                      GOOD JOB YOU GOT HIM THIS TIME
-                  </p>
-                  <button
-                      onClick={handleReturn} // Replace later with how we start a new round
-                      style={{
-                          marginTop: '30px',
-                          backgroundColor: '#49beb7',
-                          color: 'white',
-                          border: 'none',
-                          padding: '10px 20px',
-                          fontSize: '16px',
-                          borderRadius: '8px',
-                          cursor: 'pointer'
-                      }}
-                  >
-                      Next Round
-                  </button>
+                  <div className={"button-container"}>
+                      {isChameleon ? (
+                          <>
+                              <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#d60006', borderBottom: '2px solid #d60006' }}>
+                                  🦎 YOU WERE CAUGHT!
+                              </h1>
+                              <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
+                                  YOU WILL HAVE TO BE MORE CAREFUL NEXT TIME!
+                              </p>
+                          </>
+                      ) : (
+                          <>
+                              <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#00d6b1', borderBottom: '2px solid #00d6b1' }}>
+                                  🎉 YOU CAUGHT THE CHAMELEON !
+                              </h1>
+                              <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
+                                  THE SNEAKY ANIMAL COULD NOT FOOL YOUR KEEN SENSES. GREAT JOB!
+                              </p>
+                          </>
+                      )}
+                      <button
+                          onClick={handleReturn} // Replace later with how we start a new round
+                          style={{
+                              marginTop: '30px',
+                              backgroundColor: '#49beb7',
+                              color: 'white',
+                              border: 'none',
+                              padding: '10px 20px',
+                              fontSize: '16px',
+                              borderRadius: '8px',
+                              cursor: 'pointer'
+                          }}
+                      >
+                          Next Round
+                      </button>
+                  </div>
               </div>
           )}
 
