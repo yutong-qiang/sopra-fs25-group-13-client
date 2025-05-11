@@ -1223,6 +1223,7 @@ export default function GameSessionPage() {
                                       <button
                                           disabled={hasVoted || localParticipant?.identity === 'localParticipantId'}
                                           style={{
+                                              visibility: 'hidden',
                                               marginTop: '8px',
                                               backgroundColor: hasVoted || localParticipant?.identity === 'localParticipantId' ? '#ccc' : '#49beb7',
                                               color: 'white',
