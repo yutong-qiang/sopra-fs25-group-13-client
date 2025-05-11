@@ -675,7 +675,7 @@ export default function GameSessionPage() {
     };
 
     const handleReturn = () => {
-        router.push('/main');
+        router.push('/main?reset=true');
     };
 
     const handleVoting = () => {
@@ -1461,7 +1461,7 @@ export default function GameSessionPage() {
               </div>
           )}
 
-
+          {(phase === 'lobby' || phase === 'game' || phase === 'voting') && localVideoTrack && localAudioTrack && (
           <div
               style={{
                   position: 'fixed',
@@ -1523,6 +1523,7 @@ export default function GameSessionPage() {
                   {isCameraOn ? '📷' : '🚫'}
               </button>
           </div>
+          )}
       </>
   );
 }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import styles from "@/styles/page.module.css";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { useEffect, useState } from "react";
+import { useSearchParams } from 'next/navigation';
 import "@/styles/home.css";
 
 const Main: React.FC = () => {
@@ -11,6 +12,15 @@ const Main: React.FC = () => {
     const { value: token } = useLocalStorage<string>("token", "");
     const { value: id } = useLocalStorage<string>("id", "");
     const [isLoading, setIsLoading] = useState(true);
+    const searchParams = useSearchParams();
+
+    
+    useEffect(() => {
+        if (searchParams.get('reset') === 'true') {
+            window.location.replace('/main'); // now do full reload
+        }
+    }, []);
+
 
     useEffect(() => {
         const timer = setTimeout(() => {
