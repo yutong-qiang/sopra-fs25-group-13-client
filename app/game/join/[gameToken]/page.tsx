@@ -1480,58 +1480,77 @@ export default function GameSessionPage() {
                   bottom: '32px',
                   zIndex: 1000,
                   display: 'flex',
-                  gap: '24px',
-                  background: 'rgba(44, 62, 80, 0.13)',
-                  borderRadius: '16px',
-                  boxShadow: '0 4px 24px rgba(44, 62, 80, 0.10)',
-                  padding: '8px 28px',
+                  gap: '16px',
                   alignItems: 'center',
-                  backdropFilter: 'blur(8px)',
               }}
           >
               <button
                   onClick={handleMuteUnmute}
                   style={{
-                      background: 'none',
-                      border: 'none',
-                      borderRadius: '12px',
-                      width: '44px',
-                      height: '44px',
+                      background: isMicOn ? 'rgba(73, 190, 183, 0.25)' : 'rgba(231, 76, 60, 0.18)',
+                      border: '4px solid',
+                      borderColor: isMicOn ? '#49beb7' : '#e74c3c',
+                      borderRadius: '50%',
+                      width: '70px',
+                      height: '70px',
                       cursor: 'pointer',
-                      fontSize: '2rem',
-                      color: isMicOn ? '#fff' : '#e74c3c',
+                      color: isMicOn ? '#49beb7' : '#e74c3c',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       outline: 'none',
                       padding: 0,
-                      transition: 'color 0.2s',
+                      margin: 0,
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.10)',
+                  }}
+                  onMouseOver={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.08)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.18)';
+                  }}
+                  onMouseOut={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.10)';
                   }}
                   title={isMicOn ? "Mute Microphone" : "Unmute Microphone"}
               >
-                  {isMicOn ? '🎤' : '🔇'}
+                  <span style={{ fontSize: '2rem', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textShadow: '0 0 8px #fff, 0 0 2px #49beb7' }}>
+                      {isMicOn ? '🎤' : '🔇'}
+                  </span>
               </button>
               <button
                   onClick={handleCameraOnOff}
                   style={{
-                      background: 'none',
-                      border: 'none',
-                      borderRadius: '12px',
-                      width: '44px',
-                      height: '44px',
+                      background: isCameraOn ? 'rgba(73, 190, 183, 0.25)' : 'rgba(231, 76, 60, 0.18)',
+                      border: '4px solid',
+                      borderColor: isCameraOn ? '#49beb7' : '#e74c3c',
+                      borderRadius: '50%',
+                      width: '70px',
+                      height: '70px',
                       cursor: 'pointer',
-                      fontSize: '2rem',
-                      color: isCameraOn ? '#fff' : '#e74c3c',
+                      color: isCameraOn ? '#49beb7' : '#e74c3c',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       outline: 'none',
                       padding: 0,
-                      transition: 'color 0.2s',
+                      margin: 0,
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.10)',
+                  }}
+                  onMouseOver={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.08)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.18)';
+                  }}
+                  onMouseOut={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.10)';
                   }}
                   title={isCameraOn ? "Turn Camera Off" : "Turn Camera On"}
               >
-                  {isCameraOn ? '📷' : '🚫'}
+                  <span style={{ fontSize: '2rem', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textShadow: '0 0 8px #fff, 0 0 2px #49beb7' }}>
+                      {isCameraOn ? '📷' : '🚫'}
+                  </span>
               </button>
           </div>
           )}
