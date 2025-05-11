@@ -78,6 +78,8 @@ export default function GameSessionPage() {
     const [videoUpdateCounter, setVideoUpdateCounter] = useState(0);
     const [participantUpdateCounter, setParticipantUpdateCounter] = useState(0);
 
+    const sendHintButtonRef = useRef<HTMLButtonElement | null>(null);
+
     const handleVote = (playerId: string) => {
         if (hasVoted) return;
 
@@ -1042,7 +1044,15 @@ export default function GameSessionPage() {
                                           setGuessInput(e.target.value);
                                           // Clear warning when input changes
                                           if (warningMessage) setWarningMessage(null);
+                                          
                                       }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          sendHintButtonRef.current?.click();
+                                        }
+                                      }}
+                                    
                                       style={{
                                           flex: 1,
                                           height: '45px',
@@ -1056,6 +1066,7 @@ export default function GameSessionPage() {
                                       }}
                                   />
                                   <button
+                                      ref={sendHintButtonRef}
                                       onClick={() => {
                                           if (guessInput.trim()) {
                                               const messageContent = guessInput.trim();
