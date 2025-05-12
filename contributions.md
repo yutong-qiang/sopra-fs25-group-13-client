@@ -109,8 +109,9 @@ _Continue with the same table format as above._
 ## Contributions Week 6 - [05.05.25] to [11.05.25]
 | **Student** | **Date** | **Link to Commit** | **Description** | **Relevance** |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| Katie |  |  |  |  |
-| Katie |  |  |  |  |
+| Katie | 08.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/0be5452bb197d6f1dbf6a7f115f57fabb2d295d4 https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/7668c66d58175bcd5347de4dc41ec006ebc7f658| Fixed the lobby to display all 8 players. https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/25 | Now everyone can see all players video screen in the lobby. |
+| Katie | 10.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/0a8e9c1fd57868dadb9208ce93441d3e7e7d6707   | Implement the word list also on voting page. https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/70 | Better UI design. |
+| Katie | 10.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/a6d287a34f86ba5df039c80a901e67dda7f10eae | Display a message when player tries to enter more than one word as a hint. https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/99  | Better UI design. |
 | Yutong |  |  | |  |
 | Yutong |  |  |  |  |
 | Lorenzo |  |  |  |  |
