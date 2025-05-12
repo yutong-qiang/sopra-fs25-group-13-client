@@ -1338,19 +1338,21 @@ export default function GameSessionPage() {
           {phase === 'chameleon_guess' && (
               <div className="home-container">
                   {isChameleon ? (
-                      <div className={"chameleon-box"}
+                      <div className={"button-container"}
                           style={{
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          minHeight: '100vh',
                           padding: '20px',
                           color: 'white'
                       }}>
-                          <h2 style={{ fontSize: '28px', marginBottom: '20px' }}>
-                              You have been caught! Can you still win by guessing the secret word?
-                          </h2>
+                          <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#d60006', borderBottom: '2px solid #d60006' }}>
+                              YOU GOT CAUGHT!
+                          </h1>
+                          <p className="chameleon-subtitle" style={{ fontSize: '20px', maxWidth: '600px' }}>
+                              CAN YOU STILL WIN BY GUESSING THE SECRET WORD?
+                          </p>
 
                           <input
                               type="text"
@@ -1361,6 +1363,7 @@ export default function GameSessionPage() {
                                   padding: '10px 20px',
                                   fontSize: '16px',
                                   borderRadius: '8px',
+                                  marginTop: '20px',
                                   marginBottom: '20px',
                                   border: '2px solid #49beb7',
                                   width: '300px'
@@ -1389,7 +1392,18 @@ export default function GameSessionPage() {
                                       }
                                   }
                               }}
+                              style={{
+                                  marginTop: '30px',
+                                  backgroundColor: '#49beb7',
+                                  color: 'white',
+                                  border: 'none',
+                                  padding: '10px 20px',
+                                  fontSize: '16px',
+                                  borderRadius: '8px',
+                                  cursor: 'pointer'
+                              }}
                           >
+
                               Submit Guess
                           </button>
                       </div>
