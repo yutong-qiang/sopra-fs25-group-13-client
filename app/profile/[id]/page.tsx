@@ -64,10 +64,10 @@ const Profile: React.FC = () => {
                 <Image src="/chameleon.png" alt="Chameleon Avatar" width={180} height={180} />
                 <h1 className="text-white text-2xl font-bold mt-4 underline">{user?.username}</h1>
                 <p className="text-white text-xl font-semibold mt-6">
-                    GAMES PLAYED: 0
+                    GAMES PLAYED: {user?.roundsPlayed || 0}
                 </p>
                 <p className="text-white text-xl font-semibold">
-                    GAMES WON: 0
+                    GAMES WON: {user?.wins || 0}
                 </p>
                 <div className="flex justify-around mt-8">
                     <button
