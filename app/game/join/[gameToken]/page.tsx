@@ -223,9 +223,18 @@ export default function GameSessionPage() {
                                 
                                 if (isDuplicate) return prev;
                                 
+                                // Just use the playerId directly as username
+                                let username = data.playerId;
+                                
+                                // For local player, use room participant identity
+                                if (room && room.localParticipant && 
+                                    data.playerId === room.localParticipant.identity) {
+                                    username = room.localParticipant.identity;
+                                }
+                                
                                 return [...prev, {
                                     word: data.actionContent,
-                                    username: getPlayerName(data.playerId)
+                                    username: username || 'Player'
                                 }];
                             });
                         }
@@ -1116,6 +1125,7 @@ export default function GameSessionPage() {
                                                   actionType: "GIVE_HINT",
                                                   gameSessionToken: gameToken,
                                                   actionContent: messageContent,
+                                                  playerId: room?.localParticipant?.identity
                                               };
       
                                               if (wsRef.current && wsRef.current.connected) {
