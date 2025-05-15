@@ -215,6 +215,10 @@ export default function GameSessionPage() {
                     if (data.actionType === 'GIVE_HINT') {
                         if (data.actionContent) {
                             console.log('Hint from:', data.playerId);
+                            
+                            // Get the hint sender info from the game info fetch
+                            const hintSender = data.playerId;
+                            
                             setMessages(prev => {
                                 // Check if we already have this message locally
                                 const isDuplicate = prev.some(msg => 
@@ -223,18 +227,9 @@ export default function GameSessionPage() {
                                 
                                 if (isDuplicate) return prev;
                                 
-                                // Just use the playerId directly as username
-                                let username = data.playerId;
-                                
-                                // For local player, use room participant identity
-                                if (room && room.localParticipant && 
-                                    data.playerId === room.localParticipant.identity) {
-                                    username = room.localParticipant.identity;
-                                }
-                                
                                 return [...prev, {
                                     word: data.actionContent,
-                                    username: username || 'Player'
+                                    username: hintSender || 'Player'
                                 }];
                             });
                         }
@@ -261,6 +256,24 @@ export default function GameSessionPage() {
                                 console.log('🔄 Updated game info after hint:', gameInfo);
                                 setCurrentTurn(gameInfo.currentTurn);
                                 setGameState(gameInfo.gameState);
+                                
+                                // Update the last message with the correct username if needed
+                                setMessages(prevMessages => {
+                                    if (prevMessages.length === 0) return prevMessages;
+                                    
+                                    const lastMessage = prevMessages[prevMessages.length - 1];
+                                    // If the last message has 'Player' as username, update it with the current turn player
+                                    if (lastMessage.username === 'Player') {
+                                        const newMessages = [...prevMessages];
+                                        newMessages[newMessages.length - 1] = {
+                                            ...lastMessage,
+                                            username: gameInfo.lastPlayer || gameInfo.currentTurn
+                                        };
+                                        return newMessages;
+                                    }
+                                    
+                                    return prevMessages;
+                                });
                             })
                             .catch(error => {
                                 console.error('Error fetching updated game info after hint:', error);
@@ -1125,7 +1138,7 @@ export default function GameSessionPage() {
                                                   actionType: "GIVE_HINT",
                                                   gameSessionToken: gameToken,
                                                   actionContent: messageContent,
-                                                  playerId: room?.localParticipant?.identity
+                                                  playerId: room?.localParticipant?.identity || currentTurn
                                               };
       
                                               if (wsRef.current && wsRef.current.connected) {
