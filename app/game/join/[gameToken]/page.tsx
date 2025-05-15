@@ -36,6 +36,27 @@ export default function GameSessionPage() {
     const { value: token } = useLocalStorage<string>("token", "");
     const [isCopied, setIsCopied] = useState(false);
 
+    // Function to get player name from the room participants
+    const getPlayerName = (playerId: string | undefined): string => {
+        if (!playerId) return 'Player';
+        
+        // Check if this is the local player
+        if (room && room.localParticipant && room.localParticipant.identity === playerId) {
+            return room.localParticipant.identity;
+        }
+        
+        // Check remote participants
+        if (room && room.participants) {
+            for (const participant of Array.from(room.participants.values())) {
+                if (participant.identity === playerId) {
+                    return participant.identity;
+                }
+            }
+        }
+        
+        return playerId;
+    };
+
     const [room, setRoom] = useState<Room | null>(null);
     const localVideoRef = useRef<HTMLDivElement>(null);
     const remoteVideoRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -53,7 +74,7 @@ export default function GameSessionPage() {
 
     const [guessInput, setGuessInput] = useState('');
     const [chameleonGuessInput, setChameleonGuessInput] = useState('');
-    const [messages, setMessages] = useState<string[]>([]);
+    const [messages, setMessages] = useState<{word: string, username: string}[]>([]);
     const [warningMessage, setWarningMessage] = useState<string | null>(null);
 
     const videoBoxStyle = {
@@ -193,7 +214,20 @@ export default function GameSessionPage() {
                     }
                     if (data.actionType === 'GIVE_HINT') {
                         if (data.actionContent) {
-                            setMessages(prev => [...prev, data.actionContent]);
+                            console.log('Hint from:', data.playerId);
+                            setMessages(prev => {
+                                // Check if we already have this message locally
+                                const isDuplicate = prev.some(msg => 
+                                    msg.word === data.actionContent
+                                );
+                                
+                                if (isDuplicate) return prev;
+                                
+                                return [...prev, {
+                                    word: data.actionContent,
+                                    username: getPlayerName(data.playerId)
+                                }];
+                            });
                         }
 
                         // Re-fetch updated game info to get the new currentTurn
@@ -1092,8 +1126,19 @@ export default function GameSessionPage() {
                                                           'auth-token': token
                                                       }
                                                   });
+                                                  
+                                                  // Note: We'll let the server echo back the message with player info
+                                                  // If server doesn't echo back, we'd add it locally here
                                               } else {
                                                   console.warn('WebSocket not connected');
+                                                  
+                                                  // If not connected, add locally
+                                                  if (room && room.localParticipant) {
+                                                      setMessages(prev => [...prev, {
+                                                          word: messageContent,
+                                                          username: getPlayerName(room.localParticipant.identity)
+                                                      }]);
+                                                  }
                                               }
 
                                               // Clear the input after successful send
@@ -1145,7 +1190,19 @@ export default function GameSessionPage() {
                               </h2>
                               <ul style={{ color: '#49beb7', fontSize: '18px', listStyleType: 'none', padding: 0 }}>
                                   {messages.map((msg, idx) => (
-                                      <li key={idx} style={{ marginBottom: '10px' }}>{msg}</li>
+                                      <li key={idx} style={{ 
+                                          marginBottom: '10px',
+                                          padding: '5px',
+                                          borderRadius: '6px',
+                                          backgroundColor: 'rgba(73, 190, 183, 0.1)'
+                                      }}>
+                                          <span style={{ 
+                                              color: '#fff',
+                                              fontWeight: 'bold',
+                                              marginRight: '5px'
+                                          }}>{msg.username}:</span>
+                                          <span style={{ color: '#49beb7' }}>{msg.word}</span>
+                                      </li>
                                   ))}
                               </ul>
                           </div>
@@ -1325,7 +1382,26 @@ export default function GameSessionPage() {
                               </h2>
                               <ul style={{ color: '#49beb7', fontSize: '18px', listStyleType: 'none', padding: 0 }}>
                                   {messages.map((msg, idx) => (
-                                      <li key={idx} style={{ marginBottom: '15px', textAlign: 'center' }}>{msg}</li>
+                                      <li key={idx} style={{ 
+                                          marginBottom: '15px',
+                                          padding: '5px 10px',
+                                          borderRadius: '6px',
+                                          backgroundColor: 'rgba(73, 190, 183, 0.1)',
+                                          display: 'flex',
+                                          justifyContent: 'space-between',
+                                          alignItems: 'center'
+                                      }}>
+                                          <span style={{ 
+                                              color: '#fff',
+                                              fontWeight: 'bold',
+                                              marginRight: '5px'
+                                          }}>{msg.username}:</span>
+                                          <span style={{ 
+                                              color: '#49beb7',
+                                              fontWeight: 'bold',
+                                              fontSize: '20px'
+                                          }}>{msg.word}</span>
+                                      </li>
                                   ))}
                               </ul>
                           </div>
