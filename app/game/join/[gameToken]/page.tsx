@@ -66,6 +66,7 @@ export default function GameSessionPage() {
     const [secretWord, setSecretWord] = useState<string | null>(null);
     const [isChameleon, setIsChameleon] = useState<boolean>(false);
     const [currentTurn, setCurrentTurn] = useState<string | null>(null);
+    const [previousTurn, setPreviousTurn] = useState<string | null>(null);
     const [gameState, setGameState] = useState<string | null>(null);
     const [votingTimeLeft, setVotingTimeLeft] = useState<number>(30);
 
@@ -213,12 +214,15 @@ export default function GameSessionPage() {
                             });
                     }
                     if (data.actionType === 'GIVE_HINT') {
+                        // Store who just gave a hint (current player) before fetching new turn info
+                        // If we're at the state where all turns are over (currentTurn is null),
+                        // we'll try to use previousTurn instead
+                        const hintGiver = currentTurn || previousTurn;
+                        
                         if (data.actionContent) {
-                            console.log('Hint from:', data.playerId);
+                            console.log('Hint from player:', hintGiver || data.playerId);
                             
-                            // Get the hint sender info from the game info fetch
-                            const hintSender = data.playerId;
-                            
+                            // Initially add the message with the best username we have
                             setMessages(prev => {
                                 // Check if we already have this message locally
                                 const isDuplicate = prev.some(msg => 
@@ -227,9 +231,14 @@ export default function GameSessionPage() {
                                 
                                 if (isDuplicate) return prev;
                                 
+                                // Use the best available username information
+                                const bestUsername = hintGiver || data.playerId || 
+                                    (room && room.localParticipant && room.localParticipant.identity === data.playerId ? 
+                                        room.localParticipant.identity : 'Player');
+                                
                                 return [...prev, {
                                     word: data.actionContent,
-                                    username: hintSender || 'Player'
+                                    username: bestUsername
                                 }];
                             });
                         }
@@ -254,6 +263,9 @@ export default function GameSessionPage() {
                             })
                             .then(gameInfo => {
                                 console.log('🔄 Updated game info after hint:', gameInfo);
+                                
+                                // Save previous turn before updating
+                                setPreviousTurn(currentTurn);
                                 setCurrentTurn(gameInfo.currentTurn);
                                 setGameState(gameInfo.gameState);
                                 
@@ -262,12 +274,18 @@ export default function GameSessionPage() {
                                     if (prevMessages.length === 0) return prevMessages;
                                     
                                     const lastMessage = prevMessages[prevMessages.length - 1];
-                                    // If the last message has 'Player' as username, update it with the current turn player
-                                    if (lastMessage.username === 'Player') {
+                                    
+                                    // If the username needs updating, use the player who just had their turn
+                                    // In case we're at the end of all turns, we need to use previousTurn
+                                    const playerWhoJustPlayed = hintGiver || previousTurn;
+                                    
+                                    // Only update if we have better information than what's already shown
+                                    if (playerWhoJustPlayed && 
+                                        (lastMessage.username === 'Player' || !lastMessage.username)) {
                                         const newMessages = [...prevMessages];
                                         newMessages[newMessages.length - 1] = {
                                             ...lastMessage,
-                                            username: gameInfo.lastPlayer || gameInfo.currentTurn
+                                            username: playerWhoJustPlayed
                                         };
                                         return newMessages;
                                     }
