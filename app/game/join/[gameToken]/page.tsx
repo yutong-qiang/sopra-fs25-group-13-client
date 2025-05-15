@@ -214,8 +214,23 @@ export default function GameSessionPage() {
                     }
                     if (data.actionType === 'GIVE_HINT') {
                         if (data.actionContent) {
-                            // Use exactly what the header displays for CURRENT TURN
-                            console.log('Hint from player:', currentTurn || 'unknown');
+                            // Store the player ID with the hint message
+                            let hintGiver = data.username || 'Player';
+
+
+                            // Try to resolve to readable name if room is ready
+                            if (room) {
+                                const isLocal = room.localParticipant?.identity === hintGiver;
+                                if (isLocal) {
+                                    hintGiver = room.localParticipant.identity;
+                                } else {
+                                    const remoteMatch = Array.from(room.participants.values()).find(p => p.identity === hintGiver);
+                                    if (remoteMatch) {
+                                        hintGiver = remoteMatch.identity;
+                                    }
+                                }
+                            }
+                            console.log('Hint from player:', hintGiver);
                             
                             setMessages(prev => {
                                 // Check if we already have this message locally
@@ -227,7 +242,7 @@ export default function GameSessionPage() {
                                 
                                 return [...prev, {
                                     word: data.actionContent,
-                                    username: currentTurn || 'Player'  // Provide fallback for when currentTurn is null
+                                    username: hintGiver
                                 }];
                             });
                         }
