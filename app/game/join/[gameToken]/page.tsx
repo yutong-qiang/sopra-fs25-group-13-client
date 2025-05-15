@@ -66,7 +66,6 @@ export default function GameSessionPage() {
     const [secretWord, setSecretWord] = useState<string | null>(null);
     const [isChameleon, setIsChameleon] = useState<boolean>(false);
     const [currentTurn, setCurrentTurn] = useState<string | null>(null);
-    const [previousTurn, setPreviousTurn] = useState<string | null>(null);
     const [gameState, setGameState] = useState<string | null>(null);
     const [votingTimeLeft, setVotingTimeLeft] = useState<number>(30);
 
@@ -254,8 +253,6 @@ export default function GameSessionPage() {
                             .then(gameInfo => {
                                 console.log('🔄 Updated game info after hint:', gameInfo);
                                 
-                                // Save previous turn before updating
-                                setPreviousTurn(currentTurn);
                                 setCurrentTurn(gameInfo.currentTurn);
                                 setGameState(gameInfo.gameState);
                                 
