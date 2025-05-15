@@ -214,15 +214,10 @@ export default function GameSessionPage() {
                             });
                     }
                     if (data.actionType === 'GIVE_HINT') {
-                        // Store who just gave a hint (current player) before fetching new turn info
-                        // If we're at the state where all turns are over (currentTurn is null),
-                        // we'll try to use previousTurn instead
-                        const hintGiver = currentTurn || previousTurn;
-                        
                         if (data.actionContent) {
-                            console.log('Hint from player:', hintGiver || data.playerId);
+                            // Use exactly what the header displays for CURRENT TURN
+                            console.log('Hint from player:', currentTurn || 'unknown');
                             
-                            // Initially add the message with the best username we have
                             setMessages(prev => {
                                 // Check if we already have this message locally
                                 const isDuplicate = prev.some(msg => 
@@ -231,14 +226,9 @@ export default function GameSessionPage() {
                                 
                                 if (isDuplicate) return prev;
                                 
-                                // Use the best available username information
-                                const bestUsername = hintGiver || data.playerId || 
-                                    (room && room.localParticipant && room.localParticipant.identity === data.playerId ? 
-                                        room.localParticipant.identity : 'Player');
-                                
                                 return [...prev, {
                                     word: data.actionContent,
-                                    username: bestUsername
+                                    username: currentTurn || 'Player'  // Provide fallback for when currentTurn is null
                                 }];
                             });
                         }
@@ -269,29 +259,7 @@ export default function GameSessionPage() {
                                 setCurrentTurn(gameInfo.currentTurn);
                                 setGameState(gameInfo.gameState);
                                 
-                                // Update the last message with the correct username if needed
-                                setMessages(prevMessages => {
-                                    if (prevMessages.length === 0) return prevMessages;
-                                    
-                                    const lastMessage = prevMessages[prevMessages.length - 1];
-                                    
-                                    // If the username needs updating, use the player who just had their turn
-                                    // In case we're at the end of all turns, we need to use previousTurn
-                                    const playerWhoJustPlayed = hintGiver || previousTurn;
-                                    
-                                    // Only update if we have better information than what's already shown
-                                    if (playerWhoJustPlayed && 
-                                        (lastMessage.username === 'Player' || !lastMessage.username)) {
-                                        const newMessages = [...prevMessages];
-                                        newMessages[newMessages.length - 1] = {
-                                            ...lastMessage,
-                                            username: playerWhoJustPlayed
-                                        };
-                                        return newMessages;
-                                    }
-                                    
-                                    return prevMessages;
-                                });
+                                // Don't update message usernames anymore - use simpler approach that matches the header
                             })
                             .catch(error => {
                                 console.error('Error fetching updated game info after hint:', error);
