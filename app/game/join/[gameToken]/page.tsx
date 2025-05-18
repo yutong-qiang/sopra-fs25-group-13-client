@@ -68,6 +68,7 @@ export default function GameSessionPage() {
     const [currentTurn, setCurrentTurn] = useState<string | null>(null);
     const [gameState, setGameState] = useState<string | null>(null);
     const [votingTimeLeft, setVotingTimeLeft] = useState<number>(30);
+   
 
     type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting' | 'chameleon_win'| 'chameleon_word_win' | 'chameleon_guess' | 'chameleon_loose';
     const [phase, setPhase] = useState<Phase>('lobby');
@@ -138,17 +139,26 @@ export default function GameSessionPage() {
         remoteVideoRefs.current = Array(7).fill(null);
     }, []);
 
+    // Add isAdmin to GameInfo interface
     interface GameInfo {
         role: string;
         secretWord: string;
         currentTurn: string;
+        admin: boolean;
     }
 
+    const remoteParticipants = room ? Array.from(room.participants.values()) : [];
+    const allNames = [room?.localParticipant?.identity || "You (Local)", ...remoteParticipants.map(p => p.identity)];
+    
+    const [isAdmin, setIsAdmin] = useState(false);
+    
+    // Add isAdmin setting to handleGameStart
     const handleGameStart = (gameInfo: GameInfo) => {
         // Update isChameleon and secretWord
         setIsChameleon(gameInfo.role === "CHAMELEON");
         setSecretWord(gameInfo.secretWord);
         setCurrentTurn(gameInfo.currentTurn);
+        setIsAdmin(gameInfo.admin);
 
         // Manually update phase based on isChameleon
         if (gameInfo.role === "CHAMELEON") {
@@ -299,6 +309,20 @@ export default function GameSessionPage() {
                             setPhase('chameleon_loose');
                         }
                     }
+                    if (data.actionType === 'NEW_GAME') {
+                        const newToken = data.actionContent;
+                      
+                        if (isAdmin) {
+                            router.push(`/game/join/${newToken}`);
+                        } else {
+                          const confirm = window.confirm("The admin wants to play a new game! Do you want to join?");
+                          if (confirm) {
+                            router.push(`/game/join/${newToken}`);
+                          } else {
+                            router.push("/main?reset=true");
+                          }
+                        }
+                      }                      
                 });
             },
             onStompError: (frame) => {
@@ -756,9 +780,25 @@ export default function GameSessionPage() {
         videoElement.style.objectFit = 'cover';
     };
 
-    const remoteParticipants = room ? Array.from(room.participants.values()) : [];
-    const allNames = [room?.localParticipant?.identity || "You (Local)", ...remoteParticipants.map(p => p.identity)];
-
+    const handleNewRound = () => {
+        if (!wsRef.current || !wsRef.current.connected) {
+          console.error("WebSocket is not connected");
+          return;
+        }
+      
+        wsRef.current.publish({
+          destination: '/game/player-action',
+          body: JSON.stringify({
+            actionType: 'NEW_GAME',
+            gameSessionToken: gameToken
+          }),
+          headers: {
+            'auth-token': token
+          }
+        });
+      };
+      
+      
     function handleMuteUnmute() {
         if (localAudioTrack) {
             if (isMicOn) {
@@ -1545,21 +1585,40 @@ export default function GameSessionPage() {
                               </p>
                           </>
                       )}
-                      <button
-                          onClick={handleReturn} // Replace later with how we start a new round
-                          style={{
-                              marginTop: '30px',
-                              backgroundColor: '#49beb7',
-                              color: 'white',
-                              border: 'none',
-                              padding: '10px 20px',
-                              fontSize: '16px',
-                              borderRadius: '8px',
-                              cursor: 'pointer'
-                          }}
-                      >
-                          Next Round
-                      </button>
+                     <div style={{ display: 'flex', gap: '20px', marginTop: '30px' }}>
+                        <button
+                            onClick={handleReturn}
+                            style={{
+                            backgroundColor: '#49beb7',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 20px',
+                            fontSize: '16px',
+                            borderRadius: '8px',
+                            cursor: 'pointer'
+                            }}
+                        >
+                            Return
+                        </button>
+
+                        {isAdmin && (
+                            <button
+                            onClick={handleNewRound}
+                            style={{
+                                backgroundColor: '#49beb7',
+                                color: 'white',
+                                border: 'none',
+                                padding: '10px 20px',
+                                fontSize: '16px',
+                                borderRadius: '8px',
+                                cursor: 'pointer'
+                            }}
+                            >
+                            New Round
+                            </button>
+                        )}
+                        </div>
+
                   </div>
               </div>
           )}
@@ -1596,21 +1655,40 @@ export default function GameSessionPage() {
                               </p>
                           </>
                       )}
-                      <button
-                          onClick={handleReturn} // Replace later with how we start a new round
-                          style={{
-                              marginTop: '30px',
-                              backgroundColor: '#49beb7',
-                              color: 'white',
-                              border: 'none',
-                              padding: '10px 20px',
-                              fontSize: '16px',
-                              borderRadius: '8px',
-                              cursor: 'pointer'
-                          }}
-                      >
-                          Next Round
-                      </button>
+                     <div style={{ display: 'flex', gap: '20px', marginTop: '30px' }}>
+                        <button
+                            onClick={handleReturn}
+                            style={{
+                            backgroundColor: '#49beb7',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 20px',
+                            fontSize: '16px',
+                            borderRadius: '8px',
+                            cursor: 'pointer'
+                            }}
+                        >
+                            Return
+                        </button>
+
+                        {isAdmin && (
+                            <button
+                            onClick={handleNewRound}
+                            style={{
+                                backgroundColor: '#49beb7',
+                                color: 'white',
+                                border: 'none',
+                                padding: '10px 20px',
+                                fontSize: '16px',
+                                borderRadius: '8px',
+                                cursor: 'pointer'
+                            }}
+                            >
+                            New Round
+                            </button>
+                        )}
+                        </div>
+
                   </div>
               </div>
           )}
@@ -1647,21 +1725,40 @@ export default function GameSessionPage() {
                               </p>
                           </>
                       )}
-                      <button
-                          onClick={handleReturn} // Replace later with how we start a new round
-                          style={{
-                              marginTop: '30px',
-                              backgroundColor: '#49beb7',
-                              color: 'white',
-                              border: 'none',
-                              padding: '10px 20px',
-                              fontSize: '16px',
-                              borderRadius: '8px',
-                              cursor: 'pointer'
-                          }}
-                      >
-                          Next Round
-                      </button>
+                      <div style={{ display: 'flex', gap: '20px', marginTop: '30px' }}>
+                        <button
+                            onClick={handleReturn}
+                            style={{
+                            backgroundColor: '#49beb7',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 20px',
+                            fontSize: '16px',
+                            borderRadius: '8px',
+                            cursor: 'pointer'
+                            }}
+                        >
+                            Return
+                        </button>
+
+                        {isAdmin && (
+                            <button
+                            onClick={handleNewRound}
+                            style={{
+                                backgroundColor: '#49beb7',
+                                color: 'white',
+                                border: 'none',
+                                padding: '10px 20px',
+                                fontSize: '16px',
+                                borderRadius: '8px',
+                                cursor: 'pointer'
+                            }}
+                            >
+                            New Round
+                            </button>
+                        )}
+                        </div>
+
                   </div>
               </div>
           )}
