@@ -120,4 +120,22 @@ _Continue with the same table format as above._
 | Luca | 07.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/a307ce68acc913ae936eb124b5bef25564c640a1 | Changed display when all turns are over and added victory pages after voting #50, #56, #57 | after voting the correct outcome happens based on who was voted for |
 | Luca | 11.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/de82b95a4bd86c6c4d1297d3033cfd05f036a9e8 | added different victory screens based on victory condition and updated UI for victory and ready to vote | at victory the correct messages and UI elements are displayed to the players based on their roles |
 
+---
+
+## Contributions Week 7 - [12.05.25] to [18.05.25]
+| **Student** | **Date** | **Link to Commit** | **Description** | **Relevance** |
+| ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
+| Katie |18.05.2025  |https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/f5c38b1443bcb0d75fb316c2e517773e5ce1ff40 | Players can play new round after a round has added. https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/102 | Easier to play a new round than before. |
+| Katie | 14.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/63f432912d2a91908c0e522dc8db51f68a1118ab https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/546c4bf606634789cfec5c5a271edbba5dc81500 https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/896f2e1fce34f7d4b7726b3b08de65f333fe82ef | Wordlist display names when giving a hint. https://github.com/yutong-qiang/sopra-fs25-group-13-client/issues/103 | Better UI. |
+| Yutong | 04.05.25 | https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/084d03e6cc9f3001be9a1b4147d4ecfbfc29e54f | initial implementation for voting ends either when all players have voted or when time is up | so that voting time takes max. 30 sec |
+| Yutong | 05.05.25 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/90cc375835ee3746a77d22dc62954c2971647aa1 | UI for mute/unmute and cam on/off | players can mute them or turn off their cameras |
+| Lorenzo |01.05.2025| https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/595ac072a7d3a238acb726254e19f6ecbaeec75a|Implemented game action: handle chameleon guess #118, #119, #121, #122, #123| This is the final game action and it is relevant since it implements a key point of the game logic: when found, the chameleon should be able to guess the secret word|
+| Lorenzo |01.05.2025| https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/3244a06c818dbee654ceac345f612af92bdedb03|  Added authentication token check for game creation closes #30|Only authenticated users should be able to create a game session|
+| Lorenzo |01.05.2025| https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/c334a9a06b9eb26536fbf7caf91a1415d66fa96e|Handle exception thrown by TwilioService during game creation| Handling of this exceptions allows to better understand what is failing and where when creating a game session|
+| Luca | 04.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/dc7d06d9f0fdc5a0e6177f677b9abd71657797a4 | potential fix for remote videos, detaching before phase switch, now also including voting phase | videos should also work now so players can always see eachother, no matter the phase |
+| Luca | 01.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/436502c8c8809f939a066d46645bf7c45758ddac | made the voting button only visible once all players have given a clue, role assignment works, secret word is only displayed to the correct players, also trying to fix center screen #82, #36, #42 | fixed bugs and added needed features |
+_Continue with the same table format as above._
+
+---
+
 _Continue with the same table format as above._
