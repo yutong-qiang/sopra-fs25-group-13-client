@@ -82,6 +82,18 @@ const Main: React.FC = () => {
                         PROFILE
                     </button>
                     <button
+                        className="home-button"
+                        onClick={() => router.push("/rules")}
+                    >
+                        RULES
+                    </button>
+                    <button
+                        className="home-button"
+                        onClick={() => router.push("/leaderboard")}
+                    >
+                        LEADERBOARD
+                    </button>
+                    <button
                         onClick={() => {
                             localStorage.removeItem("token");
                             localStorage.removeItem("id");

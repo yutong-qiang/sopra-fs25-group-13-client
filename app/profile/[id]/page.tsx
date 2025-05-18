@@ -72,9 +72,9 @@ const Profile: React.FC = () => {
                 <div className="flex justify-around mt-8">
                     <button
                         className="home-button"
-                        onClick={() => router.push("/rules")}
+                        onClick={() => router.push("/customizeProfile")}
                     >
-                        RULES
+                        CUSTOMIZE
                     </button>
                     <button
                         className="home-button"

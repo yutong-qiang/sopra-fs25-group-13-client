@@ -2,11 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import "@/styles/home.css";
-import useLocalStorage from "@/hooks/useLocalStorage";
 
 const Rules: React.FC = () => {
     const router = useRouter();
-    const { value: id } = useLocalStorage<string>("id", "");
 
     return (
         <div className="home-container">
@@ -39,7 +37,7 @@ const Rules: React.FC = () => {
 
                 <div className="flex justify-center mt-10">
                     <button
-                        onClick={() => router.push(`/profile/${id}`)}
+                        onClick={() => router.push('/main')}
                         className="home-button"
                     >
                         RETURN
