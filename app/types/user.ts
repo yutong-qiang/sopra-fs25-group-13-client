@@ -6,4 +6,5 @@ export interface User {
   status: string | null;
   wins: number;
   roundsPlayed: number;
+  avatar?: string;
 }

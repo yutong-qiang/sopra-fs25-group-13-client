@@ -51,6 +51,7 @@ const LeaderboardPage: React.FC = () => {
                         <thead>
                         <tr className="border-b">
                             <th>Rank</th>
+                            <th>Avatar</th>
                             <th>Player</th>
                             <th>Wins</th>
                             <th>Win Rate</th>
@@ -60,6 +61,16 @@ const LeaderboardPage: React.FC = () => {
                         {leaderboard.map((entry, index) => (
                             <tr key={entry.id} className="border-b py-2">
                                 <td>{index + 1}</td>
+                                <td>
+                                    <img
+                                        src={entry.avatar ? `data:image/jpeg;base64,${entry.avatar}` : "/chameleon.png"}
+                                        alt="Avatar"
+                                        style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }}
+                                        onError={(e) => {
+                                            e.currentTarget.src = "/chameleon.png"; // fallback to default image
+                                        }}
+                                    />
+                                </td>
                                 <td>{entry.username}</td>
                                 <td>{entry.wins}</td>
                                 <td>{(entry.winRate * 100).toFixed(1)}%</td>

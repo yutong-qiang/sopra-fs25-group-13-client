@@ -7,7 +7,6 @@ import useLocalStorage from "@/hooks/useLocalStorage";
 import { User } from "@/types/user";
 import { Spin, message } from "antd";
 import "@/styles/home.css";
-import Image from "next/image";
 
 const Profile: React.FC = () => {
     const router = useRouter();
@@ -17,6 +16,9 @@ const Profile: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     /*const [unauthorized, setUnauthorized] = useState(false);*/
+    const avatarSrc = user?.avatar
+        ? `data:image/jpeg;base64,${user.avatar}`
+        : "/chameleon.png";
 
     useEffect(() => {
 
@@ -61,7 +63,20 @@ const Profile: React.FC = () => {
     return (
         <div className="home-container">
             <div className="button-container">
-                <Image src="/chameleon.png" alt="Chameleon Avatar" width={180} height={180} />
+                <img
+                    src={avatarSrc}
+                    alt="User Avatar"
+                    width={180}
+                    height={180}
+                    style={{
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        marginBottom: "20px",
+                    }}
+                    onError={(e) => {
+                        e.currentTarget.src = "/chameleon.png"; // fallback to default
+                    }}
+                />
                 <h1 className="text-white text-2xl font-bold mt-4 underline">{user?.username}</h1>
                 <p className="text-white text-xl font-semibold mt-6">
                     GAMES PLAYED: {user?.roundsPlayed || 0}
