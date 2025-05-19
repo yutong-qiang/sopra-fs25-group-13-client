@@ -60,26 +60,28 @@ const CustomizeProfile: React.FC = () => {
 
     return (
         <div className="home-container">
-            <h1 className="text-white text-2xl font-bold mb-6">Customize Profile</h1>
+            <div className={'button-container'}>
+                <h1 className="text-white text-2xl font-bold mb-6" style={{ color: "white", fontSize: "32px", fontWeight: "bold", textAlign: "center", marginBottom: "20px" }}>Customize Profile</h1>
 
-            {preview && (
-                <img
-                    src={preview}
-                    alt="Preview"
-                    style={{ width: 180, height: 180, borderRadius: "50%", marginBottom: "20px" }}
+                {preview && (
+                    <img
+                        src={preview}
+                        alt="Preview"
+                        style={{ width: 180, height: 180, borderRadius: "50%", marginBottom: "20px" }}
+                    />
+                )}
+
+                <input
+                    type="file"
+                    accept="image/jpeg"
+                    onChange={handleFileChange}
+                    style={{ marginBottom: "20px" }}
                 />
-            )}
 
-            <input
-                type="file"
-                accept="image/jpeg"
-                onChange={handleFileChange}
-                style={{ marginBottom: "20px" }}
-            />
-
-            <div>
-                <button className="home-button mr-4" onClick={handleSubmit}>Save</button>
-                <button className="home-button" onClick={() => router.push(`/profile/${id}`)}>Cancel</button>
+                <div>
+                    <button className="home-button mr-4" onClick={handleSubmit}>Save</button>
+                    <button className="home-button" onClick={() => router.push(`/profile/${id}`)}>Cancel</button>
+                </div>
             </div>
         </div>
     );

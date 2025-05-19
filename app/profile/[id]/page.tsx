@@ -77,11 +77,11 @@ const Profile: React.FC = () => {
                         e.currentTarget.src = "/chameleon.png"; // fallback to default
                     }}
                 />
-                <h1 className="text-white text-2xl font-bold mt-4 underline">{user?.username}</h1>
-                <p className="text-white text-xl font-semibold mt-6">
+                <h1 className="text-white text-2xl font-bold mt-4 underline" style={{ color: "white", fontSize: "32px", fontWeight: "bold", textAlign: "center", marginBottom: "20px", borderBottom: '2px solid white' }}>{user?.username}</h1>
+                <p className="text-white text-xl font-semibold mt-6" style={{ color: "white", fontSize: "16px", fontWeight: "bold", textAlign: "center" }}>
                     GAMES PLAYED: {user?.roundsPlayed || 0}
                 </p>
-                <p className="text-white text-xl font-semibold">
+                <p className="text-white text-xl font-semibold" style={{ color: "white", fontSize: "16px", fontWeight: "bold", textAlign: "center", marginBottom: "20px" }}>
                     GAMES WON: {user?.wins || 0}
                 </p>
                 <div className="flex justify-around mt-8">

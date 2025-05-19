@@ -43,17 +43,19 @@ const LeaderboardPage: React.FC = () => {
     return (
         <div className="home-container">
             <main className="button-container w-[400px] mx-auto text-white">
-                <h1 className="text-3xl font-bold mb-6 text-center underline">Leaderboard</h1>
+                <h1 className="text-3xl font-bold mb-6 text-center underline" style={{ color: "white", fontSize: "32px", fontWeight: "bold", textAlign: "center", marginBottom: "20px", borderBottom: '2px solid white' }}>
+                    Leaderboard
+                </h1>
                 {leaderboard.length === 0 ? (
                     <p>No data available.</p>
                 ) : (
                     <table className="w-full text-left">
                         <thead>
                         <tr className="border-b">
-                            <th>Rank</th>
-                            <th>Avatar</th>
-                            <th>Player</th>
-                            <th>Wins</th>
+                            <th>Rank|</th>
+                            <th>Avatar|</th>
+                            <th>Player|</th>
+                            <th>Wins|</th>
                             <th>Win Rate</th>
                         </tr>
                         </thead>
