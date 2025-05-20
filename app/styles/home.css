@@ -180,5 +180,26 @@ h1, button {
     height: 100%;
     object-fit: cover;
 }
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.leaderboard-table th {
+    position: sticky;
+    top: 0;
+    color: white;
+    z-index: 1;
+    padding: 8px;
+}
+
+.table-wrapper {
+    height: 380px;            /* Set height for scroll area */
+    overflow-y: auto;
+    width: 100%;
+    position: relative;
+}
   
 

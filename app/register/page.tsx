@@ -70,10 +70,13 @@ const Register: React.FC = () => {
                 <span style={{ color: 'white' }}>*</span>
               </div>
             }
-            rules={[{ required: true, message: "Please input your username!" }]}
+            rules={[{ required: true, message: "Please input your username!" },
+                { max: 20, message: "Username must be 20 characters or less." }
+            ]}
           >
             <Input 
               placeholder="Enter username"
+              //maxLength={20}
               style={{ 
                 height: '45px',
                 borderRadius: '8px',
