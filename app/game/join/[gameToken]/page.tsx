@@ -430,68 +430,7 @@ export default function GameSessionPage() {
         };
     }, [gameToken, token]);
 
-    // Re-attach local video when switching to the 'game' phase
-/*useEffect(() => {
-  if (phase === 'game' && room) {
-      const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
 
-      if (localTrack && localVideoRef.current) {
-          const el = localTrack.attach();
-          styleVideoElement(el);
-          localVideoRef.current.innerHTML = '';
-          localVideoRef.current.appendChild(el);
-      }
-
-      const bigVideoEl = document.getElementById('big-video');
-      if (localTrack && bigVideoEl) {
-          // Clear and attach to the big video slot
-          const bigEl = localTrack.attach();
-          styleVideoElement(bigEl);
-          bigVideoEl.innerHTML = '';
-          bigVideoEl.appendChild(bigEl);
-      }
-
-      // Attach remote videos
-      room.participants.forEach(participant => {
-          participant.videoTracks.forEach(publication => {
-              if (publication.track) {
-                  attachRemoteVideoTrack(publication.track, participant.sid);
-              }
-          });
-      });
-  }
-}, [phase, room]);*/
-
-    /*useEffect(() => {
-        if (phase === 'voting' && room) {
-            const localTrack = Array.from(room.localParticipant.videoTracks.values())[0]?.track as LocalVideoTrack;
-
-            if (localTrack && localVideoRef.current) {
-                const el = localTrack.attach();
-                styleVideoElement(el);
-                localVideoRef.current.innerHTML = '';
-                localVideoRef.current.appendChild(el);
-            }
-            // Attach remote videos
-            room.participants.forEach(participant => {
-                participant.videoTracks.forEach(publication => {
-                    if (publication.track) {
-                        attachRemoteVideoTrack(publication.track, participant.sid);
-                    }
-                });
-            });
-        }
-    }, [phase, room]);*/
-
-    /*const attachRemoteVideoTrack = (track: RemoteVideoTrack, participantSid: string) => {
-        const container = document.getElementById(`remote-video-${participantSid}`);
-        if (container) {
-            const videoEl = track.attach();
-            styleVideoElement(videoEl);
-            container.innerHTML = '';
-            container.appendChild(videoEl);
-        }
-    };*/
 
     function detachAllVideoTracks(participant: RemoteParticipant | LocalParticipant) {
         participant.videoTracks.forEach(publication => {
@@ -1133,6 +1072,7 @@ export default function GameSessionPage() {
                               }}>
                                   <input
                                       type="text"
+                                      maxLength={12}
                                       placeholder="Type your guess..."
                                       value={guessInput}
                                       onChange={(e) => {

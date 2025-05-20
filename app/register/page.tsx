@@ -71,12 +71,12 @@ const Register: React.FC = () => {
               </div>
             }
             rules={[{ required: true, message: "Please input your username!" },
-                { max: 20, message: "Username must be 20 characters or less." }
+                { max: 10, message: "Username must be 10 characters or less." }
             ]}
           >
             <Input 
               placeholder="Enter username"
-              //maxLength={20}
+              //maxLength={10}
               style={{ 
                 height: '45px',
                 borderRadius: '8px',
