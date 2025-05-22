@@ -103,6 +103,7 @@ export default function GameSessionPage() {
     const [participantUpdateCounter, setParticipantUpdateCounter] = useState(0);
 
     const sendHintButtonRef = useRef<HTMLButtonElement | null>(null);
+    const [chameleonName, setChameleonName] = useState<string | null>(null);
 
     const handleVote = (playerId: string) => {
         if (hasVoted) return;
@@ -295,6 +296,7 @@ export default function GameSessionPage() {
                     }
 
                     if (data.actionType === "END_VOTING") {
+                        setChameleonName(data.chameleonUsername);
                         if (data.actionResult === "CHAMELEON_FOUND") {
                             console.log("Chameleon was found! 🎯");
                             setPhase('chameleon_guess')
@@ -305,6 +307,7 @@ export default function GameSessionPage() {
                     }
 
                     if (data.actionType === "CHAMELEON_GUESS") {
+                        setChameleonName(data.chameleonUsername);
                         if (data.actionResult === "CHAMELEON_WIN") {
                             setPhase('chameleon_word_win');
                         } else if (data.actionResult === "PLAYERS_WIN") {
@@ -1496,8 +1499,8 @@ export default function GameSessionPage() {
                       </div>
                   ) : (
                       <div className="chameleon-box">
-                          <h1 className="chameleon-title">THE <span className="highlight">CHAMELEON</span> WAS DISCOVERED!</h1>
-                          <h1 className="chameleon-subtitle">WAITING FOR THEM TO GUESS THE SECRET WORD!</h1>
+                          <h1 className="chameleon-title">THE <span className="highlight">CHAMELEON</span> {chameleonName} WAS DISCOVERED!</h1>
+                          <h1 className="chameleon-subtitle">WAITING FOR {chameleonName} TO GUESS THE SECRET WORD!</h1>
                       </div>
                   )}
               </div>
@@ -1519,7 +1522,7 @@ export default function GameSessionPage() {
                       {isChameleon ? (
                           <>
                               <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#00d6b1', borderBottom: '2px solid #00d6b1' }}>
-                                  🎉 YOU GOT AWAY, CHAMELEON!
+                                  🎉 YOU GOT AWAY, CHAMELEON {chameleonName}!
                               </h1>
                               <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
                                   GREAT JOB BLENDING IN! NO ONE CAUGHT YOU.
@@ -1528,10 +1531,10 @@ export default function GameSessionPage() {
                       ) : (
                           <>
                               <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#d60006', borderBottom: '2px solid #d60006' }}>
-                                  🦎 THE CHAMELEON GOT AWAY!
+                                  🦎 THE CHAMELEON {chameleonName} GOT AWAY!
                               </h1>
                               <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
-                                  YOU DID NOT IDENTIFY THE CHAMELEON! BETTER LUCK NEXT TIME!
+                                  YOU DID NOT IDENTIFY THE CHAMELEON {chameleonName}! BETTER LUCK NEXT TIME!
                               </p>
                           </>
                       )}
@@ -1589,19 +1592,19 @@ export default function GameSessionPage() {
                       {isChameleon ? (
                           <>
                               <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#00d6b1', borderBottom: '2px solid #00d6b1' }}>
-                                  🎉 YOU FIGURED OUT THE SECRET WORD, CHAMELEON!
+                                  🎉 YOU FIGURED OUT THE SECRET WORD, CHAMELEON {chameleonName}!
                               </h1>
                               <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
-                                  GREAT DEDUCTION SKILLS! NO ONE CAN FOOL YOU.
+                                  GREAT DEDUCTION SKILLS! NO ONE CAN FOOL YOU: {chameleonName}.
                               </p>
                           </>
                       ) : (
                           <>
                               <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#d60006', borderBottom: '2px solid #d60006' }}>
-                                  🦎 THE CHAMELEON FIGURED OU THE SECRET WORD!
+                                  🦎 THE CHAMELEON {chameleonName} FIGURED OUT THE SECRET WORD!
                               </h1>
                               <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
-                                  YOU WILL HAVE TO BE MORE CAREFUL NEXT TIME!
+                                  YOU WILL HAVE TO BE MORE CAREFUL NEXT TIME! {chameleonName} IS A GOOD BLENDER!
                               </p>
                           </>
                       )}
@@ -1659,7 +1662,7 @@ export default function GameSessionPage() {
                       {isChameleon ? (
                           <>
                               <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#d60006', borderBottom: '2px solid #d60006' }}>
-                                  🦎 YOU WERE CAUGHT!
+                                  🦎 YOU WERE CAUGHT, {chameleonName}!
                               </h1>
                               <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
                                   YOU WILL HAVE TO BE MORE CAREFUL NEXT TIME!
@@ -1668,10 +1671,10 @@ export default function GameSessionPage() {
                       ) : (
                           <>
                               <h1 className="chameleon-title" style={{ fontSize: '32px', marginBottom: '20px', color: '#00d6b1', borderBottom: '2px solid #00d6b1' }}>
-                                  🎉 YOU CAUGHT THE CHAMELEON !
+                                  🎉 YOU CAUGHT THE CHAMELEON {chameleonName}!
                               </h1>
                               <p className="chameleon-subtitle" style={{ fontSize: '24px', maxWidth: '600px' }}>
-                                  THE SNEAKY ANIMAL COULD NOT FOOL YOUR KEEN SENSES. GREAT JOB!
+                                  THE SNEAKY ANIMAL {chameleonName} COULD NOT FOOL YOUR KEEN SENSES. GREAT JOB!
                               </p>
                           </>
                       )}
