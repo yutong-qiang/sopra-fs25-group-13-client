@@ -1721,21 +1721,29 @@ export default function GameSessionPage() {
                   left: 0,
                   width: '100vw',
                   height: '100vh',
-                  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
                   zIndex: 2000,
               }}>
                   <div style={{
-                      backgroundColor: 'white',
+                      backgroundColor: 'rgba(73, 190, 183, 0.2)',
                       padding: '30px',
                       borderRadius: '12px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                      border: '2px solid #49beb7',
+                      boxShadow: '0 4px 12px rgba(73, 190, 183, 0.5)',
                       textAlign: 'center',
                       width: '400px',
+                      color: 'white',
                   }}>
-                      <h2 style={{ marginBottom: '20px' }}>
+                      <h2 style={{ 
+                          marginBottom: '20px', 
+                          borderBottom: '2px solid #49beb7',
+                          paddingBottom: '10px',
+                          fontSize: '22px',
+                          fontWeight: 'bold'
+                      }}>
                           Do you really want to return or wait for the admin to start a new round?
                       </h2>
                       <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
@@ -1745,13 +1753,14 @@ export default function GameSessionPage() {
                                   backgroundColor: '#d60006',
                                   color: 'white',
                                   padding: '10px 20px',
-                                  borderRadius: '6px',
+                                  borderRadius: '8px',
                                   border: 'none',
                                   cursor: 'pointer',
-                                  fontWeight: 'bold'
+                                  fontWeight: 'bold',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                               }}
                           >
-                              Return
+                              Return to Main Menu
                           </button>
                           <button
                               onClick={() => setShowReturnConfirm(false)}
@@ -1759,10 +1768,11 @@ export default function GameSessionPage() {
                                   backgroundColor: '#49beb7',
                                   color: 'white',
                                   padding: '10px 20px',
-                                  borderRadius: '6px',
+                                  borderRadius: '8px',
                                   border: 'none',
                                   cursor: 'pointer',
-                                  fontWeight: 'bold'
+                                  fontWeight: 'bold',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                               }}
                           >
                               Wait for Admin
