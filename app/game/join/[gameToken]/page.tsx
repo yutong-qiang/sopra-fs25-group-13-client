@@ -78,6 +78,8 @@ export default function GameSessionPage() {
     const [messages, setMessages] = useState<{word: string, username: string}[]>([]);
     const [warningMessage, setWarningMessage] = useState<string | null>(null);
 
+    const [showReturnConfirm, setShowReturnConfirm] = useState(false);
+
     const videoBoxStyle = {
         backgroundColor: '#000',
         minHeight: '150px',
@@ -695,6 +697,14 @@ export default function GameSessionPage() {
 
     const handleReturn = () => {
         router.push('/main?reset=true');
+    };
+
+    const handleNewGameReturn = () => {
+        if (!isAdmin && (phase === 'chameleon_win' || phase === 'chameleon_loose' || phase === 'chameleon_word_win')) {
+            setShowReturnConfirm(true); // Show confirmation popup
+        } else {
+            router.push('/main?reset=true');
+        }
     };
 
     const handleVoting = () => {
@@ -1527,7 +1537,7 @@ export default function GameSessionPage() {
                       )}
                      <div style={{ display: 'flex', gap: '20px', marginTop: '30px' }}>
                         <button
-                            onClick={handleReturn}
+                            onClick={handleNewGameReturn}
                             style={{
                             backgroundColor: '#49beb7',
                             color: 'white',
@@ -1595,9 +1605,9 @@ export default function GameSessionPage() {
                               </p>
                           </>
                       )}
-                     <div style={{ display: 'flex', gap: '20px', marginTop: '30px' }}>
+                      <div style={{ display: 'flex', gap: '20px', marginTop: '30px' }}>
                         <button
-                            onClick={handleReturn}
+                            onClick={handleNewGameReturn}
                             style={{
                             backgroundColor: '#49beb7',
                             color: 'white',
@@ -1667,7 +1677,7 @@ export default function GameSessionPage() {
                       )}
                       <div style={{ display: 'flex', gap: '20px', marginTop: '30px' }}>
                         <button
-                            onClick={handleReturn}
+                            onClick={handleNewGameReturn}
                             style={{
                             backgroundColor: '#49beb7',
                             color: 'white',
@@ -1699,6 +1709,65 @@ export default function GameSessionPage() {
                         )}
                         </div>
 
+                  </div>
+              </div>
+          )}
+
+          {/* Return confirmation modal - placed at root level */}
+          {showReturnConfirm && (
+              <div style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  width: '100vw',
+                  height: '100vh',
+                  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  zIndex: 2000,
+              }}>
+                  <div style={{
+                      backgroundColor: 'white',
+                      padding: '30px',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                      textAlign: 'center',
+                      width: '400px',
+                  }}>
+                      <h2 style={{ marginBottom: '20px' }}>
+                          Do you really want to return or wait for the admin to start a new round?
+                      </h2>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+                          <button
+                              onClick={() => router.push('/main?reset=true')}
+                              style={{
+                                  backgroundColor: '#d60006',
+                                  color: 'white',
+                                  padding: '10px 20px',
+                                  borderRadius: '6px',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  fontWeight: 'bold'
+                              }}
+                          >
+                              Return
+                          </button>
+                          <button
+                              onClick={() => setShowReturnConfirm(false)}
+                              style={{
+                                  backgroundColor: '#49beb7',
+                                  color: 'white',
+                                  padding: '10px 20px',
+                                  borderRadius: '6px',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  fontWeight: 'bold'
+                              }}
+                          >
+                              Wait for Admin
+                          </button>
+                      </div>
                   </div>
               </div>
           )}
