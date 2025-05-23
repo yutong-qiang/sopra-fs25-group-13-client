@@ -138,6 +138,15 @@ export default function GameSessionPage() {
         }
     };
 
+    const isValidHint = (hint: string): boolean => {
+        const cleanedHint = hint.trim().toLowerCase();
+        if (!cleanedHint) return false;
+        if (cleanedHint === secretWord?.toLowerCase()) return false;
+        if (messages.some(msg => msg.word.toLowerCase() === cleanedHint)) return false;
+        return true;
+      };
+      
+
     useEffect(() => {
         remoteVideoRefs.current = Array(7).fill(null);
     }, []);
@@ -1125,6 +1134,11 @@ export default function GameSessionPage() {
                                                       return;
                                                   }
 
+                                                  if (!isValidHint(messageContent)) {
+                                                    setWarningMessage("Invalid hint: it's the secret word or already used.");
+                                                    return;
+                                                  }
+                                                  
                                                   const payload = {
                                                       actionType: "GIVE_HINT",
                                                       gameSessionToken: gameToken,
