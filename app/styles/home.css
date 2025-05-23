@@ -196,10 +196,33 @@ h1, button {
 }
 
 .table-wrapper {
-    height: 380px;            /* Set height for scroll area */
+    height: 600px;            /* Set height for scroll area */
     overflow-y: auto;
     width: 100%;
     position: relative;
+}
+
+.rules-container {
+    text-align: left;
+    color: white;
+}
+
+.rules-container ol {
+    list-style: none;
+    padding: 0;
+    margin: 0 auto;
+    max-width: 700px;
+}
+
+.rules-container li {
+    margin-bottom: 30px;
+}
+
+.rules-container ul {
+    list-style-type: disc;
+    margin-top: 10px;
+    padding-left: 20px;
+    text-align: left;
 }
   
 

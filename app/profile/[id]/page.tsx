@@ -13,6 +13,7 @@ const Profile: React.FC = () => {
     const { id } = useParams();
     const apiService = useApi();
     const { value: token } = useLocalStorage<string>("token", "");
+    const { value: localId } = useLocalStorage<string>("id", "");
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     /*const [unauthorized, setUnauthorized] = useState(false);*/
@@ -58,6 +59,12 @@ const Profile: React.FC = () => {
 
     if (!token) {
         return null;
+    }
+
+    if (id !== localId) {
+        //message.error("Access denied. You can only view your own profile.");
+        router.push("/main");
+        return;
     }
 
     return (
