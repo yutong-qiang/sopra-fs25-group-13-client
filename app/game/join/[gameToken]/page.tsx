@@ -1036,12 +1036,12 @@ export default function GameSessionPage() {
                                   justifyContent: 'center',
                                   alignItems: 'center',
                                   color: 'white',
-                                  fontSize: '46px',
+                                  fontSize: '32px',
                                   fontWeight: 'bold',
                                   textAlign: 'center',
                                   padding: '20px'
                               }}>
-                                  START THE VOTING NOW TO CATCH THE CHAMELEON!
+                                  YOU CAN NOW DISCUSS WHO SEEMS SUSPICIOUS AND WHEN YOU ARE READY, THE HOST CAN START THE VOTING!
                               </div>
                           ) : (
                               <div
@@ -1057,124 +1057,126 @@ export default function GameSessionPage() {
                                   }}
                               />
                           )}
-
-                          <div style={{
-                              display: 'flex',
-                              gap: '10px',
-                              width: '100%',
-                              flexDirection: 'column'
-                          }}>
-                              {warningMessage && (
-                                  <div style={{
-                                      backgroundColor: 'rgba(255, 99, 71, 0.7)',
-                                      color: 'white',
-                                      padding: '8px 12px',
-                                      borderRadius: '8px',
-                                      textAlign: 'center',
-                                      marginBottom: '5px',
-                                      fontSize: '14px',
-                                      fontWeight: 'bold'
-                                  }}>
-                                      {warningMessage}
-                                  </div>
-                              )}
+                          {currentTurn === room?.localParticipant?.identity &&(
                               <div style={{
                                   display: 'flex',
                                   gap: '10px',
-                                  width: '100%'
+                                  width: '100%',
+                                  flexDirection: 'column'
                               }}>
-                                  <input
-                                      type="text"
-                                      maxLength={12}
-                                      placeholder="Type your guess..."
-                                      value={guessInput}
-                                      onChange={(e) => {
-                                          setGuessInput(e.target.value);
-                                          // Clear warning when input changes
-                                          if (warningMessage) setWarningMessage(null);
-                                          
-                                      }}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          e.preventDefault();
-                                          sendHintButtonRef.current?.click();
-                                        }
-                                      }}
-                                    
-                                      style={{
-                                          flex: 1,
-                                          height: '45px',
-                                          padding: '0 20px',
-                                          borderRadius: '25px',
-                                          border: '2px solid #49beb7',
-                                          backgroundColor: 'white',
-                                          color: '#333',
-                                          fontSize: '16px',
-                                          outline: 'none'
-                                      }}
-                                  />
-                                  <button
-                                      ref={sendHintButtonRef}
-                                      onClick={() => {
-                                          if (guessInput.trim()) {
-                                              const messageContent = guessInput.trim();
-                                              
-                                              // Check if the input contains multiple words
-                                              if (messageContent.includes(' ')) {
-                                                  setWarningMessage("Only one word allowed!");
-                                                  return;
-                                              }
-      
-                                              const payload = {
-                                                  actionType: "GIVE_HINT",
-                                                  gameSessionToken: gameToken,
-                                                  actionContent: messageContent,
-                                                  playerId: room?.localParticipant?.identity || currentTurn
-                                              };
-      
-                                              if (wsRef.current && wsRef.current.connected) {
-                                                  wsRef.current.publish({
-                                                      destination: '/game/player-action',
-                                                      body: JSON.stringify(payload),
-                                                      headers: {
-                                                          'auth-token': token
-                                                      }
-                                                  });
-                                                  
-                                                  // Note: We'll let the server echo back the message with player info
-                                                  // If server doesn't echo back, we'd add it locally here
-                                              } else {
-                                                  console.warn('WebSocket not connected');
-                                                  
-                                                  // If not connected, add locally
-                                                  if (room && room.localParticipant) {
-                                                      setMessages(prev => [...prev, {
-                                                          word: messageContent,
-                                                          username: getPlayerName(room.localParticipant.identity)
-                                                      }]);
-                                                  }
-                                              }
-
-                                              // Clear the input after successful send
-                                              setGuessInput('');
-                                          }
-                                      }}
-                                      style={{
-                                          padding: '10px 30px',
-                                          borderRadius: '25px',
-                                          border: 'none',
-                                          backgroundColor: '#49beb7',
+                                  {warningMessage && (
+                                      <div style={{
+                                          backgroundColor: 'rgba(255, 99, 71, 0.7)',
                                           color: 'white',
-                                          fontSize: '20px',
-                                          fontWeight: 'bold',
-                                          cursor: 'pointer',
-                                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                                      }}
-                                  >
-                                      SEND
-                                  </button>
+                                          padding: '8px 12px',
+                                          borderRadius: '8px',
+                                          textAlign: 'center',
+                                          marginBottom: '5px',
+                                          fontSize: '14px',
+                                          fontWeight: 'bold'
+                                      }}>
+                                          {warningMessage}
+                                      </div>
+                                  )}
+                                  <div style={{
+                                      display: 'flex',
+                                      gap: '10px',
+                                      width: '100%'
+                                  }}>
+                                      <input
+                                          type="text"
+                                          maxLength={12}
+                                          placeholder="Type your guess..."
+                                          value={guessInput}
+                                          onChange={(e) => {
+                                              setGuessInput(e.target.value);
+                                              // Clear warning when input changes
+                                              if (warningMessage) setWarningMessage(null);
+
+                                          }}
+                                          onKeyDown={(e) => {
+                                              if (e.key === 'Enter') {
+                                                  e.preventDefault();
+                                                  sendHintButtonRef.current?.click();
+                                              }
+                                          }}
+
+                                          style={{
+                                              flex: 1,
+                                              height: '45px',
+                                              padding: '0 20px',
+                                              borderRadius: '25px',
+                                              border: '2px solid #49beb7',
+                                              backgroundColor: 'white',
+                                              color: '#333',
+                                              fontSize: '16px',
+                                              outline: 'none'
+                                          }}
+                                      />
+                                      <button
+                                          ref={sendHintButtonRef}
+                                          onClick={() => {
+                                              if (guessInput.trim()) {
+                                                  const messageContent = guessInput.trim();
+
+                                                  // Check if the input contains multiple words
+                                                  if (messageContent.includes(' ')) {
+                                                      setWarningMessage("Only one word allowed!");
+                                                      return;
+                                                  }
+
+                                                  const payload = {
+                                                      actionType: "GIVE_HINT",
+                                                      gameSessionToken: gameToken,
+                                                      actionContent: messageContent,
+                                                      playerId: room?.localParticipant?.identity || currentTurn
+                                                  };
+
+                                                  if (wsRef.current && wsRef.current.connected) {
+                                                      wsRef.current.publish({
+                                                          destination: '/game/player-action',
+                                                          body: JSON.stringify(payload),
+                                                          headers: {
+                                                              'auth-token': token
+                                                          }
+                                                      });
+
+                                                      // Note: We'll let the server echo back the message with player info
+                                                      // If server doesn't echo back, we'd add it locally here
+                                                  } else {
+                                                      console.warn('WebSocket not connected');
+
+                                                      // If not connected, add locally
+                                                      if (room && room.localParticipant) {
+                                                          setMessages(prev => [...prev, {
+                                                              word: messageContent,
+                                                              username: getPlayerName(room.localParticipant.identity)
+                                                          }]);
+                                                      }
+                                                  }
+
+                                                  // Clear the input after successful send
+                                                  setGuessInput('');
+                                              }
+                                          }}
+                                          style={{
+                                              padding: '10px 30px',
+                                              borderRadius: '25px',
+                                              border: 'none',
+                                              backgroundColor: '#49beb7',
+                                              color: 'white',
+                                              fontSize: '20px',
+                                              fontWeight: 'bold',
+                                              cursor: 'pointer',
+                                              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                          }}
+                                      >
+                                          SEND
+                                      </button>
+                                  </div>
                               </div>
-                          </div>
+                          )}
+
                       </div>
                       <div style={{
                           display: 'flex',
