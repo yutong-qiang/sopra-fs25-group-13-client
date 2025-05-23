@@ -88,8 +88,8 @@ reason).
 |Added complex test| Test explicitly required for M3|
 | Yutong  | 21.04 | https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/f5697cbd7cd852206984daa6117be1e3b2170d5b, https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/8a95ea3c030d3feafe2a4d95a3295ca688cd2f49 | video working on remote between different players | to be able to continue with the next webpages |
 | Yutong  | 22.04 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/89bdec9f39fc54d3482b3d923439b692b5b70166 | fixed bug of Audio also working | communication on remote complete |
-|  |  |  |  |  |
-|  |  |  |  |  |
+| Luca | 25.04 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/7eceeae66932e56dc595637df6212df5d41c4ebe | implemented correctly retrieving the roles and the secret word, keeping video connection on voting phase, and giving hints #69, #72, #34, #40, #41, #38 | players now get assigned a role and secret word through websockets, can give hints and keep connections through phases  |
+| Luca | 25.04 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/46fabd95a49d00988e4af6c1bf5e5fb936cca571 | implemented dynamically shifting between phases to change the UI depending on the phase | This removed the need for many pages, making it simpler and ensuring connections are kept |
 ---
 
 ## Contributions Week 5 - [28.04.25] to [04.05.25]
@@ -102,8 +102,8 @@ reason).
 | Lorenzo |01.05.2025| https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/595ac072a7d3a238acb726254e19f6ecbaeec75a|Implemented game action: handle chameleon guess #118, #119, #121, #122, #123| This is the final game action and it is relevant since it implements a key point of the game logic: when found, the chameleon should be able to guess the secret word|
 | Lorenzo |01.05.2025| https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/3244a06c818dbee654ceac345f612af92bdedb03|  Added authentication token check for game creation closes #30|Only authenticated users should be able to create a game session|
 | Lorenzo |01.05.2025| https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/c334a9a06b9eb26536fbf7caf91a1415d66fa96e|Handle exception thrown by TwilioService during game creation| Handling of this exceptions allows to better understand what is failing and where when creating a game session|
-| Luca |  |  |  |  |
-| Luca |  |  |  |  |
+| Luca | 04.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/dc7d06d9f0fdc5a0e6177f677b9abd71657797a4 | potential fix for remote videos, detaching before phase switch, now also including voting phase | videos should also work now so players can always see eachother, no matter the phase |
+| Luca | 01.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/436502c8c8809f939a066d46645bf7c45758ddac | made the voting button only visible once all players have given a clue, role assignment works, secret word is only displayed to the correct players, also trying to fix center screen #82, #36, #42 | fixed bugs and added needed features |
 _Continue with the same table format as above._
 
 ---
@@ -117,8 +117,8 @@ _Continue with the same table format as above._
 | Yutong |  |  |  |  |
 | Lorenzo |  06.05.25|  https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/9cbaa6495b7e2673b2ced4ad2c28d3a8a60d0f9b|  Fixes #125 (voting countdown)|  Countdown for voting phase is a key feature specified inuser stories. Previous code that created issues with handling the voting phase has been fixed.|
 | Lorenzo |  11.05.25|  https://github.com/yutong-qiang/sopra-fs25-group-13-server/commit/f8c9128ac2dd7e1bac04a63a0021dadf797321bb| Closes #140, #144 |  Implemented endpoint for changing avatar (feature required by user stories).|
-| Luca |  |  |  |  |
-| Luca |  |  |  |  |
+| Luca | 07.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/a307ce68acc913ae936eb124b5bef25564c640a1 | Changed display when all turns are over and added victory pages after voting #50, #56, #57 | after voting the correct outcome happens based on who was voted for |
+| Luca | 11.05.2025 | https://github.com/yutong-qiang/sopra-fs25-group-13-client/commit/de82b95a4bd86c6c4d1297d3033cfd05f036a9e8 | added different victory screens based on victory condition and updated UI for victory and ready to vote | at victory the correct messages and UI elements are displayed to the players based on their roles |
 
 ## Contributions Week 7 - [12.05.25] to [18.05.25]
 | **Student** | **Date** | **Link to Commit** | **Description** | **Relevance** |
