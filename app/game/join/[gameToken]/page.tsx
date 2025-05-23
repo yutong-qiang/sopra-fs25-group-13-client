@@ -1103,8 +1103,8 @@ export default function GameSessionPage() {
                                   }}
                               />
                           )}
-                          {currentTurn === room?.localParticipant?.identity &&(
                               <div style={{
+                                  visibility: currentTurn === room?.localParticipant?.identity ? 'visible' : 'hidden',
                                   display: 'flex',
                                   gap: '10px',
                                   width: '100%',
@@ -1226,7 +1226,6 @@ export default function GameSessionPage() {
                                       </button>
                                   </div>
                               </div>
-                          )}
 
                       </div>
                       <div style={{
