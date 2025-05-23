@@ -163,6 +163,7 @@ export default function GameSessionPage() {
     const allNames = [room?.localParticipant?.identity || "You (Local)", ...remoteParticipants.map(p => p.identity)];
     
     const [isAdmin, setIsAdmin] = useState(false);
+
     
     // Add isAdmin setting to handleGameStart
     const handleGameStart = (gameInfo: GameInfo) => {
@@ -184,6 +185,40 @@ export default function GameSessionPage() {
             setPhase('game');
         }, 5000);
     };
+
+    useEffect(() => {
+        if (!token || !gameToken) return;
+
+        const isLocal = typeof window !== "undefined" && window.location.hostname === "localhost";
+
+        fetch(
+            `${isLocal
+                ? 'http://localhost:8080'
+                : 'https://sopra-fs25-group-13-server.oa.r.appspot.com'}/game/info/${gameToken}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            }
+        )
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to fetch game info");
+                return res.json();
+            })
+            .then(gameInfo => {
+                console.log("Initial game info on page load:", gameInfo);
+                setIsAdmin(gameInfo.admin);
+                // Optionally set other game info state here if you want
+                // setIsChameleon(gameInfo.role === "CHAMELEON");
+                // setSecretWord(gameInfo.secretWord);
+                // setCurrentTurn(gameInfo.currentTurn);
+            })
+            .catch(err => {
+                console.error("Error fetching initial game info:", err);
+            });
+
+    }, [token, gameToken]);
 
 
     // === WebSocket Setup using STOMP over SockJS ===
@@ -910,7 +945,9 @@ export default function GameSessionPage() {
                           </div>
                           <div className="flex gap-4 w-full" style={{ marginTop: '20px' }}>
                               <button onClick={handleReturn} className="home-button">RETURN</button>
+                              {isAdmin &&(
                               <button onClick={handleStartGame} className="home-button">START GAME</button>
+                              )}
                           </div>
                       </div>
                   </div>
