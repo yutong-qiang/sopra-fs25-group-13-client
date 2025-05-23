@@ -67,7 +67,7 @@ export default function GameSessionPage() {
     const [isChameleon, setIsChameleon] = useState<boolean>(false);
     const [currentTurn, setCurrentTurn] = useState<string | null>(null);
     const [gameState, setGameState] = useState<string | null>(null);
-    const [votingTimeLeft, setVotingTimeLeft] = useState<number>(30);
+    const [votingTimeLeft, setVotingTimeLeft] = useState<number>(60);
    
 
     type Phase = 'lobby' | 'role_chameleon' | 'role_player' | 'game' | 'voting' | 'chameleon_win'| 'chameleon_word_win' | 'chameleon_guess' | 'chameleon_loose';
@@ -336,7 +336,7 @@ export default function GameSessionPage() {
                     }
                     if (data.actionType === 'START_VOTING') {
                         setPhase('voting');
-                        setVotingTimeLeft(30); // Reset timer when voting starts
+                        setVotingTimeLeft(60); // Reset timer when voting starts
                     }
 
                     if (data.actionType === "END_VOTING") {
